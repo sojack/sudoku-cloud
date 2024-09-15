@@ -8,8 +8,8 @@
 }
 
 .cell{
-  width: 60px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
   border: 1px solid lightgray;
   text-align: center;
   display: flex;
