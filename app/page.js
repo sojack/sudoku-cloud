@@ -22,17 +22,16 @@ function Cell ({value}){
   )
 }
 
-function Board () {
+function Board ({initialValues}) {
   return (
     <div className={styles.board}>
       {
-        row.map((r,i) => {
-          return(
-            col.map((c, j)=>(
-                <Cell key={`${r}${c}`} value={initialBoard[i].charAt(j)} />
+        row.map((r,i) => (
+            col.map((c, j) => (
+                <Cell key={`${r}${c}`} value={initialValues[i].charAt(j)} />
             ))
           )
-        })
+        )
       }
     </div>
   )
@@ -41,7 +40,7 @@ function Board () {
 export default function Home() {
   return (
       <main className={styles.main}>
-        <Board />
+        <Board initialValues={initialBoard}/>
       </main>
   );
 }

@@ -50,9 +50,8 @@
 .cell:nth-child(27n+27){
   border-bottom-color: black;
 }
-/* .cell:last-child{
-  border-right-color: red;
-} */
+
+
 .input{
   color:cornflowerblue;
 }
