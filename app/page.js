@@ -1,7 +1,5 @@
 import styles from "./page.module.css";
 
-let row = ["r1","r2","r3","r4","r5","r6","r7","r8","r9"]
-let col = ["c1","c2","c3","c4","c5","c6","c7","c8","c9"]
 let initialBoard = [
   "72-------",
   "-5---9---",
@@ -14,21 +12,24 @@ let initialBoard = [
   "-------19",
 ]
 
-function Cell ({value}){
+function Cell ({value, inputID}){
   return(
     value=="-" ? 
-    <input type="text" className={`${styles.cell} ${styles.input}`} /> 
-    : <input readOnly type="text" className={styles.cell} value={value}/>
+    <input id={inputID} type="text" className={`${styles.cell} ${styles.input}`} /> 
+    : <input id={inputID} readOnly type="text" className={styles.cell} value={value}/>
   )
 }
 
 function Board ({initialValues}) {
+  let row = ["r1","r2","r3","r4","r5","r6","r7","r8","r9"]
+  let col = ["c1","c2","c3","c4","c5","c6","c7","c8","c9"]
+
   return (
     <div className={styles.board}>
       {
         row.map((r,i) => (
             col.map((c, j) => (
-                <Cell key={`${r}${c}`} value={initialValues[i].charAt(j)} />
+                <Cell key={`${r}${c}`} inputID={`${r}${c}`} value={initialValues[i].charAt(j)} />
             ))
           )
         )
