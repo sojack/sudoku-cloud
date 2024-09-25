@@ -61,6 +61,10 @@
   grid-template-columns: repeat(9, 1fr);
 }
 
+.editButton{
+margin-top:1rem;
+}
+
 @media (max-width: 600px) {
   
 
