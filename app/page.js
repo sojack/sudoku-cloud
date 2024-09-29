@@ -2,48 +2,44 @@
 import { useState } from "react";
 import styles from "./page.module.css";
 
-let defaultBoard = [
-  "72-------",
-  "-5---9---",
-  "----38---",
-  "---4--5--",
-  "--3---9--",
-  "--1--3---",
-  "---25----",
-  "---6---3-",
-  "-------19"
-]
-
-let solution = [
-  "729146358",
-  "358729146",
-  "416538792",
-  "897412563",
-  "243865971",
-  "561973824",
-  "934251687",
-  "182697435",
-  "675384219"
-]
-
-function Cell ({value, inputID}){
+function Cell ({value, inputID, pos, setBoard, boardValues}){
+  function changeHandler(e){
+    console.log(boardValues)
+    let newBoard=boardValues
+    newBoard[pos[0]][pos[1]]=e.target.value
+    setBoard(newBoard)
+  }
   return(
-    value=="-" ? 
-    <input id={inputID} type="number" className={`${styles.cell} ${styles.input}`} /> 
-    : <input id={inputID} readOnly type="number" className={styles.cell} value={value}/>
+    value=="x" ? 
+      <input onChange={changeHandler} id={inputID} type="number" className={`${styles.cell} ${styles.input}`}/> 
+      : <input readOnly id={inputID} type="number" className={styles.cell} value={value}/>
   )
 }
 
-function Board ({initialValues}) {
-  let row = ["r1","r2","r3","r4","r5","r6","r7","r8","r9"]
-  let col = ["c1","c2","c3","c4","c5","c6","c7","c8","c9"]
+function Board ({boardValues, setBoard}) {
+  let row = ["r0","r1","r2","r3","r4","r5","r6","r7","r8"]
+  let col = ["c0","c1","c2","c3","c4","c5","c6","c7","c8"]
+  
+  const [guess, setGuess] = useState(false)
+  
+  function changeHandler(e){
+    let value=e.target.value
+    let row = e.target.id.charAt(1)
+    let col = e.target.id.charAt(3)
+    let correctValue = solution[row][col]
+    (value===correctValue) ? setGuess(true): setGuess(false)
+    console.log(`column: ${col} row: ${row} Value: ${value} CorrectValue: ${correctValue} ${guess}`)
+  }
+
+  // let colorIndicator
+  // guess ? colorIndicator=styles.right : colorIndicator=styles.wrong
 
   return (
     <div className={styles.board}>
       {
         row.map((r,i) => (
             col.map((c, j) => (
-                <Cell key={`${r}${c}`} inputID={`${r}${c}`} value={initialValues[i].charAt(j)} />
+                <Cell key={`${r}${c}`} inputID={`${r}${c}`} value={boardValues[i][j]} pos={[i,j]} setBoard={setBoard} boardValues={boardValues}/>
             ))
           )
         )
@@ -54,26 +50,49 @@ function Board ({initialValues}) {
 
 export default function Home() {
 
-  const [initialBoard, setInitialBoard] = useState(defaultBoard)
+  let defaultBoard = [
+    [7,2,'x','x','x','x','x','x','x'],
+    ['x',5,'x','x','x',9,'x','x','x'],
+    ['x','x','x','x',3,8,'x','x','x'],
+    ['x','x','x',4,'x','x',5,'x','x'],
+    ['x','x',3,'x','x','x',9,'x','x'],
+    ['x','x',1,'x','x',3,'x','x','x'],
+    ['x','x','x',2,5,'x','x','x','x'],
+    ['x','x','x',6,'x','x','x',3,'x'],
+    ['x','x','x','x','x','x','x',1,9]
+  ]
+
+  let solution = [
+    [7,2,9,1,4,6,3,5,8],
+    [3,5,8,7,2,9,1,4,6],
+    [4,1,6,5,3,8,7,9,2],
+    [8,9,7,4,1,2,5,6,3],
+    [2,4,3,8,6,5,9,7,1],
+    [5,6,1,9,7,3,8,2,4],
+    [9,3,4,2,5,1,6,8,7],
+    [1,8,2,6,9,7,4,3,5],
+    [6,7,5,3,8,4,2,1,9]
+  ]
+  const [boardState, setboardState] = useState(defaultBoard)
 
   function clickHandler() {
-    setInitialBoard([
-      "---------",
-      "---------",
-      "---------",
-      "---------",
-      "---------",
-      "---------",
-      "---------",
-      "---------",
-      "---------",
+    setboardState([
+      'x','x','x','x','x','x','x','x','x',
+      'x','x','x','x','x','x','x','x','x',
+      'x','x','x','x','x','x','x','x','x',
+      'x','x','x','x','x','x','x','x','x',
+      'x','x','x','x','x','x','x','x','x',
+      'x','x','x','x','x','x','x','x','x',
+      'x','x','x','x','x','x','x','x','x',
+      'x','x','x','x','x','x','x','x','x',
+      'x','x','x','x','x','x','x','x','x',
     ])
-    console.log(initialBoard)
+    console.log(boardState)
   }
 
   return (
       <main className={styles.main}>
-        <Board initialValues={initialBoard}/>
+        <Board boardValues={boardState} setBoard={setboardState}/>
         {/* <button className={styles.editButton} onClick={clickHandler}>edit</button> */}
       </main>
   );
