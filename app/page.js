@@ -2,21 +2,25 @@
 import { useState } from "react";
 import styles from "./page.module.css";
 
-function Cell ({value, inputID, pos, setBoard, boardValues}){
+function Cell ({value, inputID, pos, setBoard, boardValues, solution}){
+  const [canditate, setCandidate] = useState(false)
+
   function changeHandler(e){
-    console.log(boardValues)
+    // console.log(boardValues)
     let newBoard=boardValues
     newBoard[pos[0]][pos[1]]=e.target.value
+    let isCorrect= 0||solution[pos[0]][pos[1]]===parseInt(e.target.value)
     setBoard(newBoard)
+    solution[pos[0]][pos[1]]===parseInt(e.target.value) ? setCandidate(true):setCandidate(false)
   }
   return(
     value=="x" ? 
-      <input onChange={changeHandler} id={inputID} type="number" className={`${styles.cell} ${styles.input}`}/> 
+      <input onChange={changeHandler} id={inputID} type="number" className={`${styles.cell} ${styles.input}` + (canditate?" ":` ${styles.wrong}`)}/> 
       : <input readOnly id={inputID} type="number" className={styles.cell} value={value}/>
   )
 }
 
-function Board ({boardValues, setBoard}) {
+function Board ({boardValues, setBoard, solution}) {
   let row = ["r0","r1","r2","r3","r4","r5","r6","r7","r8"]
   let col = ["c0","c1","c2","c3","c4","c5","c6","c7","c8"]
   
@@ -39,7 +43,7 @@ function Board ({boardValues, setBoard}) {
       {
         row.map((r,i) => (
             col.map((c, j) => (
-                <Cell key={`${r}${c}`} inputID={`${r}${c}`} value={boardValues[i][j]} pos={[i,j]} setBoard={setBoard} boardValues={boardValues}/>
+                <Cell key={`${r}${c}`} value={boardValues[i][j]} inputID={`${r}${c}`} pos={[i,j]} setBoard={setBoard} boardValues={boardValues} solution={solution}/>
             ))
           )
         )
@@ -75,24 +79,24 @@ export default function Home() {
   ]
   const [boardState, setboardState] = useState(defaultBoard)
 
-  function clickHandler() {
-    setboardState([
-      'x','x','x','x','x','x','x','x','x',
-      'x','x','x','x','x','x','x','x','x',
-      'x','x','x','x','x','x','x','x','x',
-      'x','x','x','x','x','x','x','x','x',
-      'x','x','x','x','x','x','x','x','x',
-      'x','x','x','x','x','x','x','x','x',
-      'x','x','x','x','x','x','x','x','x',
-      'x','x','x','x','x','x','x','x','x',
-      'x','x','x','x','x','x','x','x','x',
-    ])
-    console.log(boardState)
-  }
+  // function resetBoard() {
+  //   setboardState([
+  //     'x','x','x','x','x','x','x','x','x',
+  //     'x','x','x','x','x','x','x','x','x',
+  //     'x','x','x','x','x','x','x','x','x',
+  //     'x','x','x','x','x','x','x','x','x',
+  //     'x','x','x','x','x','x','x','x','x',
+  //     'x','x','x','x','x','x','x','x','x',
+  //     'x','x','x','x','x','x','x','x','x',
+  //     'x','x','x','x','x','x','x','x','x',
+  //     'x','x','x','x','x','x','x','x','x',
+  //   ])
+  //   console.log(boardState)
+  // }
 
   return (
       <main className={styles.main}>
-        <Board boardValues={boardState} setBoard={setboardState}/>
+        <Board boardValues={boardState} setBoard={setboardState} solution={solution}/>
         {/* <button className={styles.editButton} onClick={clickHandler}>edit</button> */}
       </main>
   );
