@@ -19,8 +19,8 @@ function Cell ({value, inputID, pos, solution, setErrorCount, errorCount}){
 
   return(
       value == "x" || canditate ? // if blank or candidate is false
-      <input onChange={changeHandler} id={inputID} type="number" className={compoundClass}/> 
-      : <input readOnly id={inputID} type="number" className={styles.cell} value={value}/>
+      <input onChange={changeHandler} id={inputID} maxlength={1} type="tel" min={0} max={9} className={compoundClass}/> 
+      : <input readOnly id={inputID} type="tel" className={styles.cell} value={value}/>
   )
 }
 
