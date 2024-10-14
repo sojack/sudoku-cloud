@@ -19,12 +19,12 @@ function Cell ({value, inputID, pos, solution, setErrorCount, errorCount}){
 
   return(
       value == "x" || canditate ? // if blank or candidate is false
-      <input onChange={changeHandler} id={inputID} maxlength={1} type="tel" min={0} max={9} className={compoundClass}/> 
+      <input onChange={changeHandler} id={inputID} maxLength={1} type="tel" min={0} max={9} className={compoundClass}/> 
       : <input readOnly id={inputID} type="tel" className={styles.cell} value={value}/>
   )
 }
 
-function Board ({boardValues, setBoard, solution}) {
+function Board ({boardValues, solution, boardDetail}) {
   let row = ["r0","r1","r2","r3","r4","r5","r6","r7","r8"]
   let col = ["c0","c1","c2","c3","c4","c5","c6","c7","c8"]
   const [errorCount, setErrorCount] = useState(0)
@@ -36,20 +36,17 @@ function Board ({boardValues, setBoard, solution}) {
       </p>    
       <div className={styles.board}>
         {
-          row.map((r,i) => (
-              col.map((c, j) => (
+          boardDetail.map(b => (
                   <Cell 
-                    key = {`${r}${c}`} 
-                    value = {boardValues[i][j]} 
-                    inputID = {`${r}${c}`} 
-                    pos = {[i,j]} 
-                    setBoard = {setBoard} 
-                    boardValues = {boardValues} 
-                    solution = {solution} 
+                    key = {b.location} 
+                    value = {b.initialValue} 
+                    inputID = {b.location} 
+                    pos = {b.location} 
+                    solution = {b.solution} 
                     setErrorCount = {setErrorCount} 
                     errorCount = {errorCount}
                   />
-              ))
+              
             )
           )
         }
@@ -83,6 +80,38 @@ export default function Home() {
     [1,8,2,6,9,7,4,3,5],
     [6,7,5,3,8,4,2,1,9]
   ]
+
+
+  // board data needs to hold more details about each cell
+  // 
+  // initial value, 
+  // guess (bool) to differentiate beetween a static number and an input field, 
+  // current value
+  // dynamically created by the function createBoardDetail
+  // array of objects {"initialValue":1, "isGuess": Bool, "currentValue":"", "location":"r0c0", "solution"}
+
+  function createBoardDetail (board){
+    let row = ["r0","r1","r2","r3","r4","r5","r6","r7","r8"]
+    let col = ["c0","c1","c2","c3","c4","c5","c6","c7","c8"]
+    let result = []
+    row.map((r,i) => (
+      col.map((c, j) => {
+        let initialValue = defaultBoard[i][j]
+        let isGuess = initialValue=="x" ? true : false
+        let location = r+c
+        let solutionValue = solution[i][j]
+        let data={"initialValue":initialValue, "isGuess":isGuess, "currentValue":initialValue, "location": location, "solution":solutionValue}
+        result.push(data)
+      })
+      )
+    )
+    return result
+  }
+
+  let boardDetail = createBoardDetail(defaultBoard)
+
+  console.log(boardDetail)
+
   const [boardState, setboardState] = useState(defaultBoard)
 
   // function resetBoard() {
@@ -101,7 +130,7 @@ export default function Home() {
 
   return (
       <main className={styles.main}>
-        <Board boardValues={boardState} setBoard={setboardState} solution={solution}/>
+        <Board boardValues={boardState} solution={solution} boardDetail={boardDetail}/>
         {/* <button className={styles.editButton} onClick={clickHandler}>edit</button> */}
       </main>
   );
