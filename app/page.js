@@ -31,7 +31,7 @@ function Board ({boardDetail}) {
   return (
     <>
       <p>
-        ErrorCount = {errorCount}
+        Error Count = {errorCount}
       </p>    
       <div className={styles.board}>
         {
@@ -46,7 +46,6 @@ function Board ({boardDetail}) {
                     setErrorCount = {setErrorCount} 
                     errorCount = {errorCount}
                   />
-              
             )
           )
         }
@@ -56,7 +55,6 @@ function Board ({boardDetail}) {
 }
 
 export default function Home() {
-
   let defaultBoard = [
     [7,2,'x','x','x','x','x','x','x'],
     ['x',5,'x','x','x',9,'x','x','x'],
@@ -100,7 +98,6 @@ export default function Home() {
   }
 
   let boardDetail = createBoardDetail(defaultBoard)
-
 
   const [boardState, setboardState] = useState(defaultBoard)
 

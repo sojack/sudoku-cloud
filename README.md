@@ -1,6 +1,7 @@
 Sudoku Cloud - boom!
 to do:
-- add check / error count
+✅ add check / error count
+- add style
 - add input digits (custom ui)
 - add input count (found/total)
 - random sudoku
