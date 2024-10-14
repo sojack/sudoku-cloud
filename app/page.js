@@ -2,29 +2,28 @@
 import { useState } from 'react'
 import styles from "./page.module.css"
 
-function Cell ({value, inputID, pos, solution, setErrorCount, errorCount}){
-  const [canditate, setCandidate] = useState(false)
+function Cell ({value, inputID, pos, isGuess, solution, setErrorCount}){
+  const [canditate, setCandidate] = useState(true)
 
   function runOnError(){
     setCandidate(false)
     setErrorCount( (count) => (count+1));
-    console.log(errorCount)
   }
 
   function changeHandler(e){
-    solution[pos[0]][pos[1]]===parseInt(e.target.value) ? setCandidate(true) : runOnError()
+    solution === parseInt(e.target.value)||"" ? setCandidate(true) : runOnError()
   }
 
   let compoundClass = `${styles.cell} ${styles.input}` + (canditate?" ":` ${styles.wrong}`)
 
   return(
-      value == "x" || canditate ? // if blank or candidate is false
+      isGuess ? // if blank or candidate is false
       <input onChange={changeHandler} id={inputID} maxLength={1} type="tel" min={0} max={9} className={compoundClass}/> 
       : <input readOnly id={inputID} type="tel" className={styles.cell} value={value}/>
   )
 }
 
-function Board ({boardValues, solution, boardDetail}) {
+function Board ({boardDetail}) {
   let row = ["r0","r1","r2","r3","r4","r5","r6","r7","r8"]
   let col = ["c0","c1","c2","c3","c4","c5","c6","c7","c8"]
   const [errorCount, setErrorCount] = useState(0)
@@ -41,6 +40,7 @@ function Board ({boardValues, solution, boardDetail}) {
                     key = {b.location} 
                     value = {b.initialValue} 
                     inputID = {b.location} 
+                    isGuess = {b.isGuess} 
                     pos = {b.location} 
                     solution = {b.solution} 
                     setErrorCount = {setErrorCount} 
@@ -81,15 +81,6 @@ export default function Home() {
     [6,7,5,3,8,4,2,1,9]
   ]
 
-
-  // board data needs to hold more details about each cell
-  // 
-  // initial value, 
-  // guess (bool) to differentiate beetween a static number and an input field, 
-  // current value
-  // dynamically created by the function createBoardDetail
-  // array of objects {"initialValue":1, "isGuess": Bool, "currentValue":"", "location":"r0c0", "solution"}
-
   function createBoardDetail (board){
     let row = ["r0","r1","r2","r3","r4","r5","r6","r7","r8"]
     let col = ["c0","c1","c2","c3","c4","c5","c6","c7","c8"]
@@ -110,7 +101,6 @@ export default function Home() {
 
   let boardDetail = createBoardDetail(defaultBoard)
 
-  console.log(boardDetail)
 
   const [boardState, setboardState] = useState(defaultBoard)
 
