@@ -1,29 +1,17 @@
-// Rule-based validation and game-status derivations.
-// A board is 81 cells of { value: 1-9 | null, given: boolean }.
+// Solution-aware validation and game-status derivations.
+// A board is 81 cells of { value: 1-9 | null, given: boolean, notes: number[] }.
+// A solution is 81 digits 1-9 (the puzzle's unique completed grid).
 
-import { peersOf } from './grid'
-
-// Indices of filled cells whose value duplicates a peer's value.
-// Both members of any duplicate are included.
-export function conflicts(board) {
+// Indices of filled cells whose value differs from the solution.
+// Empty cells are never mistakes; given cells match the solution by construction.
+export function mistakes(board, solution) {
   const flagged = new Set()
-
   for (let i = 0; i < 81; i++) {
     const value = board[i].value
     if (value == null) continue
-    for (const p of peersOf(i)) {
-      if (board[p].value === value) {
-        flagged.add(i)
-        flagged.add(p)
-      }
-    }
+    if (value !== solution[i]) flagged.add(i)
   }
-
   return flagged
-}
-
-export function conflictCount(board) {
-  return conflicts(board).size
 }
 
 // For each digit 1-9, how many are still to be placed (clamped at 0).
@@ -40,10 +28,7 @@ export function remainingByDigit(board) {
   return remaining
 }
 
-export function isComplete(board) {
-  return board.every((cell) => cell.value != null)
-}
-
-export function isWon(board) {
-  return isComplete(board) && conflicts(board).size === 0
+// True when every cell's value equals the solution.
+export function isSolved(board, solution) {
+  return board.every((cell, i) => cell.value === solution[i])
 }
