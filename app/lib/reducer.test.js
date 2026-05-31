@@ -52,6 +52,55 @@ describe('boardReducer - setValue', () => {
   })
 })
 
+describe('boardReducer - toggleNote', () => {
+  it('adds a digit to an empty cell notes', () => {
+    const state = createBoard(emptyGivens())
+    const next = boardReducer(state, { type: 'toggleNote', index: 0, value: 4 })
+    expect(next[0].notes).toEqual([4])
+  })
+
+  it('removes a digit that is already present', () => {
+    let state = createBoard(emptyGivens())
+    state = boardReducer(state, { type: 'toggleNote', index: 0, value: 4 })
+    const next = boardReducer(state, { type: 'toggleNote', index: 0, value: 4 })
+    expect(next[0].notes).toEqual([])
+  })
+
+  it('keeps notes sorted ascending', () => {
+    let state = createBoard(emptyGivens())
+    state = boardReducer(state, { type: 'toggleNote', index: 0, value: 7 })
+    const next = boardReducer(state, { type: 'toggleNote', index: 0, value: 3 })
+    expect(next[0].notes).toEqual([3, 7])
+  })
+
+  it('is a no-op on given cells', () => {
+    const givens = emptyGivens()
+    givens[0] = 3
+    const state = createBoard(givens)
+    const next = boardReducer(state, { type: 'toggleNote', index: 0, value: 4 })
+    expect(next[0].notes).toEqual([])
+  })
+
+  it('is a no-op on cells that already hold a value', () => {
+    let state = createBoard(emptyGivens())
+    state = boardReducer(state, { type: 'setValue', index: 0, value: 5 })
+    const next = boardReducer(state, { type: 'toggleNote', index: 0, value: 4 })
+    expect(next[0].notes).toEqual([])
+  })
+
+  it('ignores out-of-range values', () => {
+    const state = createBoard(emptyGivens())
+    expect(boardReducer(state, { type: 'toggleNote', index: 0, value: 0 })[0].notes).toEqual([])
+    expect(boardReducer(state, { type: 'toggleNote', index: 0, value: 10 })[0].notes).toEqual([])
+  })
+
+  it('does not mutate the previous state', () => {
+    const state = createBoard(emptyGivens())
+    boardReducer(state, { type: 'toggleNote', index: 0, value: 4 })
+    expect(state[0].notes).toEqual([])
+  })
+})
+
 describe('boardReducer - clearCell', () => {
   it('clears an editable cell', () => {
     let state = createBoard(emptyGivens())
