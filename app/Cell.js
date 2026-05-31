@@ -1,40 +1,29 @@
 import styles from './page.module.css'
 
-// A single Sudoku cell. Given cells are read-only; editable cells accept a
-// single digit 1-9. An empty value clears the cell.
-export default function Cell({ cell, index, conflicted, onSet, onClear }) {
-  function handleChange(e) {
-    const raw = e.target.value.replace(/[^1-9]/g, '').slice(-1)
-    if (raw === '') {
-      onClear(index)
-    } else {
-      onSet(index, Number(raw))
-    }
-  }
-
+// A single Sudoku cell rendered as a button. Click to select. Shows the value
+// when set, otherwise a 3x3 grid of pencil marks. Given cells are read-only.
+export default function Cell({ cell, index, conflicted, selected, onSelect }) {
   const className =
     `${styles.cell} ` +
     (cell.given ? styles.given : styles.input) +
-    (conflicted ? ` ${styles.wrong}` : '')
-
-  if (cell.given) {
-    return (
-      <input
-        readOnly
-        type="tel"
-        className={className}
-        value={cell.value ?? ''}
-      />
-    )
-  }
+    (conflicted ? ` ${styles.wrong}` : '') +
+    (selected ? ` ${styles.selected}` : '')
 
   return (
-    <input
-      type="tel"
-      maxLength={1}
-      className={className}
-      value={cell.value ?? ''}
-      onChange={handleChange}
-    />
+    <button type="button" className={className} onClick={() => onSelect(index)}>
+      {cell.value != null ? (
+        cell.value
+      ) : cell.notes.length ? (
+        <span className={styles.notes}>
+          {Array.from({ length: 9 }, (_, k) => k + 1).map((d) => (
+            <span key={d} className={styles.noteCell}>
+              {cell.notes.includes(d) ? d : ''}
+            </span>
+          ))}
+        </span>
+      ) : (
+        ''
+      )}
+    </button>
   )
 }
