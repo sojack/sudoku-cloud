@@ -36,19 +36,18 @@ export function boardReducer(state, action) {
     case 'clearCell': {
       const { index } = action
       if (state[index].given) return state
-      return replaceCell(state, index, null)
+      const next = state.slice()
+      next[index] = { ...next[index], value: null, notes: [] }
+      return next
     }
 
     case 'newGame':
       return createBoard(action.givens)
 
+    case 'restore':
+      return action.board
+
     default:
       return state
   }
-}
-
-function replaceCell(state, index, value) {
-  const next = state.slice()
-  next[index] = { ...next[index], value }
-  return next
 }

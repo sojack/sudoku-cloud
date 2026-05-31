@@ -102,11 +102,18 @@ describe('boardReducer - toggleNote', () => {
 })
 
 describe('boardReducer - clearCell', () => {
-  it('clears an editable cell', () => {
+  it('clears the value of a valued cell', () => {
     let state = createBoard(emptyGivens())
-    state = boardReducer(state, { type: 'setCell', index: 0, value: 5 })
+    state = boardReducer(state, { type: 'setValue', index: 0, value: 5 })
     const next = boardReducer(state, { type: 'clearCell', index: 0 })
     expect(next[0].value).toBe(null)
+  })
+
+  it('clears the notes of a noted cell', () => {
+    let state = createBoard(emptyGivens())
+    state = boardReducer(state, { type: 'toggleNote', index: 0, value: 4 })
+    const next = boardReducer(state, { type: 'clearCell', index: 0 })
+    expect(next[0].notes).toEqual([])
   })
 
   it('does not clear given cells', () => {
@@ -118,13 +125,23 @@ describe('boardReducer - clearCell', () => {
   })
 })
 
+describe('boardReducer - restore', () => {
+  it('replaces the board with the provided board', () => {
+    const state = createBoard(emptyGivens())
+    const board = createBoard(emptyGivens())
+    board[40] = { value: 6, given: false, notes: [] }
+    const next = boardReducer(state, { type: 'restore', board })
+    expect(next).toBe(board)
+  })
+})
+
 describe('boardReducer - newGame', () => {
   it('builds a fresh board from new givens', () => {
     const state = createBoard(emptyGivens())
     const givens = emptyGivens()
     givens[40] = 6
     const next = boardReducer(state, { type: 'newGame', givens })
-    expect(next[40]).toEqual({ value: 6, given: true })
+    expect(next[40]).toEqual({ value: 6, given: true, notes: [] })
   })
 })
 
