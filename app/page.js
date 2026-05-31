@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import styles from "./page.module.css"
 
 function Cell ({value, inputID, pos, isGuess, solution, setErrorCount}){
@@ -27,12 +27,39 @@ function Board ({boardDetail}) {
   let row = ["r0","r1","r2","r3","r4","r5","r6","r7","r8"]
   let col = ["c0","c1","c2","c3","c4","c5","c6","c7","c8"]
   const [errorCount, setErrorCount] = useState(0)
+  const [progress, setProgress] = useState({1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0})
+
+  useEffect(() => {
+    //cycle through all 81 cells
+    let inVal = {}
+    let updateProgress = {}
+    for(let x in boardDetail){
+      let num = boardDetail[x].initialValue
+      if (typeof(num)=='number'){
+        inVal[num] = (inVal[num] + 1) || 1
+      }
+    }
+    for(let x in progress) {
+      updateProgress[x] = inVal[x] || progress[x]
+    }
+    setProgress(updateProgress)
+    // console.log(progress)
+    // console.log(updateProgress)
+  },[errorCount])
+
 
   return (
     <>
+    <div>
       <p>
         Error Count = {errorCount}
-      </p>    
+      </p>
+      <p>
+        Progress:<br/>
+        1: {progress[1]}/9 &nbsp;&nbsp; 2: {progress[2]}/9 &nbsp;&nbsp; 3: {progress[3]}/9 &nbsp;&nbsp; 4: {progress[4]}/9 &nbsp;&nbsp; 5: {progress[5]}/9 &nbsp;&nbsp; 6: {progress[6]}/9 &nbsp;&nbsp; 7: {progress[7]}/9 &nbsp;&nbsp; 8: {progress[8]}/9 &nbsp;&nbsp; 9: {progress[9]}/9 
+      </p>
+
+    </div>
       <div className={styles.board}>
         {
           boardDetail.map(b => (
@@ -98,7 +125,7 @@ export default function Home() {
   }
 
   let boardDetail = createBoardDetail(defaultBoard)
-
+  // console.log(boardDetail)
   const [boardState, setboardState] = useState(defaultBoard)
 
   // function resetBoard() {
