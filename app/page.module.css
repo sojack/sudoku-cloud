@@ -102,19 +102,6 @@
   text-align: center;
 }
 
-.remaining {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: center;
-  margin-top: 0.25rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.digitDone {
-  color: lightgray;
-}
-
 .win {
   margin-top: 0.5rem;
   font-weight: bold;

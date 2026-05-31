@@ -31,12 +31,12 @@ The path from the current proof-of-concept to a finished, daily-use app.
 - [x] Add win detection (board full + no conflicts → victory state)
 - [x] Remove dead code (`app/components/Cell.js`, `app/test/`, commented blocks)
 
-### Phase 2 — Core playability
+### Phase 2 — Core playability ✅
 
-- [ ] Custom number-input UI (1–9 keypad) for keyboard-free / mobile play
-- [ ] Pencil / notes mode (candidates per cell)
-- [ ] New game / reset / erase controls
-- [ ] localStorage persistence (resume on refresh)
+- [x] Custom number-input UI (1–9 keypad) for keyboard-free / mobile play
+- [x] Pencil / notes mode (candidates per cell)
+- [x] New game / reset / erase controls
+- [x] localStorage persistence (resume on refresh)
 
 ### Phase 3 — Puzzle variety
 
