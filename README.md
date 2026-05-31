@@ -21,15 +21,15 @@ npm run build    # production build
 
 The path from the current proof-of-concept to a finished, daily-use app.
 
-### Phase 1 — Fix the foundation (make it a real game) ⬅ in progress
+### Phase 1 — Fix the foundation (make it a real game) ✅
 
-- [ ] Lift board state into React as a single source of truth (per-cell
-      `value`, `given`, `notes`); make cells controlled inputs
-- [ ] Replace per-keystroke solution-matching with proper Sudoku conflict
-      checking (row / column / box), plus optional check-against-solution
-- [ ] Fix the progress / found-vs-total counter to read live board state
-- [ ] Add win detection (board full + valid → victory state)
-- [ ] Remove dead code (`app/components/Cell.js`, `app/test/`, commented blocks)
+- [x] Lift board state into React as a single source of truth (per-cell
+      `value`, `given`); cells are controlled inputs
+- [x] Replace per-keystroke solution-matching with proper Sudoku conflict
+      checking (row / column / box)
+- [x] Fix the progress counter to read live board state (per-digit remaining)
+- [x] Add win detection (board full + no conflicts → victory state)
+- [x] Remove dead code (`app/components/Cell.js`, `app/test/`, commented blocks)
 
 ### Phase 2 — Core playability
 
