@@ -15,19 +15,27 @@ describe('createBoard', () => {
     const givens = emptyGivens()
     givens[0] = 7
     const board = createBoard(givens)
-    expect(board[0]).toEqual({ value: 7, given: true })
+    expect(board[0]).toEqual({ value: 7, given: true, notes: [] })
   })
 
   it('marks empty cells as non-given with null value', () => {
     const board = createBoard(emptyGivens())
-    expect(board[0]).toEqual({ value: null, given: false })
+    expect(board[0]).toEqual({ value: null, given: false, notes: [] })
   })
 
   it('treats 0 as empty', () => {
     const givens = emptyGivens()
     givens[5] = 0
     const board = createBoard(givens)
-    expect(board[5]).toEqual({ value: null, given: false })
+    expect(board[5]).toEqual({ value: null, given: false, notes: [] })
+  })
+
+  it('initializes every cell with an empty notes array', () => {
+    const givens = Array(81).fill(null)
+    givens[0] = 3
+    const board = createBoard(givens)
+    expect(board[0]).toEqual({ value: 3, given: true, notes: [] })
+    expect(board[1]).toEqual({ value: null, given: false, notes: [] })
   })
 })
 

@@ -6,7 +6,9 @@
 export function createBoard(givens) {
   return givens.map((g) => {
     const filled = typeof g === 'number' && g >= 1 && g <= 9
-    return filled ? { value: g, given: true } : { value: null, given: false }
+    return filled
+      ? { value: g, given: true, notes: [] }
+      : { value: null, given: false, notes: [] }
   })
 }
 
