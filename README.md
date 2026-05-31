@@ -1,6 +1,60 @@
-Sudoku Cloud - boom!
-to do:
-✅ add check / error count
+# Sudoku Cloud
+
+A personal Sudoku web app built with Next.js + React. The goal is a polished,
+self-use Sudoku game: play, generate, and create puzzles, with progress saved
+across sessions.
+
+## Stack
+
+- Next.js 16 (App Router) + React 19
+- CSS Modules
+
+## Running
+
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # production build
+```
+
+## Roadmap
+
+The path from the current proof-of-concept to a finished, daily-use app.
+
+### Phase 1 — Fix the foundation (make it a real game) ⬅ in progress
+
+- [ ] Lift board state into React as a single source of truth (per-cell
+      `value`, `given`, `notes`); make cells controlled inputs
+- [ ] Replace per-keystroke solution-matching with proper Sudoku conflict
+      checking (row / column / box), plus optional check-against-solution
+- [ ] Fix the progress / found-vs-total counter to read live board state
+- [ ] Add win detection (board full + valid → victory state)
+- [ ] Remove dead code (`app/components/Cell.js`, `app/test/`, commented blocks)
+
+### Phase 2 — Core playability
+
+- [ ] Custom number-input UI (1–9 keypad) for keyboard-free / mobile play
+- [ ] Pencil / notes mode (candidates per cell)
+- [ ] New game / reset / erase controls
+- [ ] localStorage persistence (resume on refresh)
+
+### Phase 3 — Puzzle variety
+
+- [ ] Puzzle generator + solver with difficulty levels
+- [ ] "Make sudoku" mode: clear board, enter a puzzle, solve it
+
+### Phase 4 — Polish
+
+- [ ] Styling pass + dark mode + mobile layout
+- [ ] Timer, hint button, undo / redo
+- [ ] Highlight peers / same-numbers
+- [ ] Keyboard navigation between cells
+
+## History
+
+Original scratch to-do (superseded by the roadmap above):
+
+- ✅ add check / error count
 - add style
 - add input digits (custom ui)
 - add input count (found/total)
