@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "next": "^16.2.6",
@@ -15,6 +17,7 @@
   },
   "devDependencies": {
     "eslint": "^9.39.4",
-    "eslint-config-next": "^16.2.6"
+    "eslint-config-next": "^16.2.6",
+    "vitest": "^4.1.7"
   }
 }
