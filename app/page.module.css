@@ -124,3 +124,53 @@
 .wrong {
   color: red;
 }
+
+.keypad {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.keys {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 0.25rem;
+}
+
+.key {
+  position: relative;
+  min-width: 34px;
+  padding: 0.4rem 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.keyBadge {
+  position: absolute;
+  top: 1px;
+  right: 3px;
+  font-size: 8px;
+  color: gray;
+}
+
+.keyDisabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.keyActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.notesToggle {
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+}
+
+.notesActive {
+  background: #e8f0fe;
+  font-weight: bold;
+}
