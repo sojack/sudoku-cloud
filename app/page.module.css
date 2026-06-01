@@ -172,3 +172,19 @@
   padding: 0.4rem 0.8rem;
   cursor: pointer;
 }
+
+.difficulty {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.difficultyBtn {
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+
+.difficultyActive {
+  background: #e8f0fe;
+  font-weight: bold;
+}
