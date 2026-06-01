@@ -99,6 +99,10 @@
   color: var(--ink-given);
 }
 
+.sameNumber {
+  background: var(--peer-bg);
+}
+
 .selected {
   background: var(--sel-bg);
 }
