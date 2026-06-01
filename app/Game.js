@@ -9,6 +9,7 @@ import ThemeToggle from './ThemeToggle'
 import { createBoard } from './lib/board'
 import { boardReducer } from './lib/reducer'
 import { mistakes as findMistakes, remainingByDigit, isSolved } from './lib/validation'
+import { sameNumberCells } from './lib/highlight'
 import { generate } from './lib/generator'
 import { validatePuzzle } from './lib/makepuzzle'
 import { loadGame, saveGame } from './lib/storage'
@@ -33,6 +34,10 @@ export default function Game() {
   const mistakes = useMemo(
     () => (making ? NO_MISTAKES : findMistakes(board, solution)),
     [making, board, solution]
+  )
+  const sameNumber = useMemo(
+    () => sameNumberCells(board, selectedIndex),
+    [board, selectedIndex]
   )
   const remaining = useMemo(() => remainingByDigit(board), [board])
   const won = useMemo(
@@ -155,6 +160,7 @@ export default function Game() {
       <Board
         board={board}
         mistakes={mistakes}
+        sameNumber={sameNumber}
         selectedIndex={selectedIndex}
         onSelect={setSelectedIndex}
       />
