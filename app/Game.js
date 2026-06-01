@@ -5,6 +5,7 @@ import StatusBar from './StatusBar'
 import Keypad from './Keypad'
 import Controls from './Controls'
 import DifficultySelect from './DifficultySelect'
+import ThemeToggle from './ThemeToggle'
 import { createBoard } from './lib/board'
 import { boardReducer } from './lib/reducer'
 import { mistakes as findMistakes, remainingByDigit, isSolved } from './lib/validation'
@@ -142,6 +143,7 @@ export default function Game() {
 
   return (
     <div className={styles.game}>
+      <ThemeToggle />
       <StatusBar mistakeCount={making ? null : mistakes.size} />
       {won && <p className={styles.win}>Solved! 🎉</p>}
       {making && (
