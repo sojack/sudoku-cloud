@@ -2,10 +2,11 @@ import styles from './page.module.css'
 
 // A single Sudoku cell rendered as a button. Click to select. Shows the value
 // when set, otherwise a 3x3 grid of pencil marks. Given cells are read-only.
-export default function Cell({ cell, index, mistake, selected, onSelect }) {
+export default function Cell({ cell, index, mistake, selected, sameNumber, onSelect }) {
   const className =
     `${styles.cell} ` +
     (cell.given ? styles.given : styles.input) +
+    (sameNumber ? ` ${styles.sameNumber}` : '') +
     (mistake ? ` ${styles.wrong}` : '') +
     (selected ? ` ${styles.selected}` : '')
 
