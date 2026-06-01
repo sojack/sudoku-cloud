@@ -30,7 +30,8 @@
 
 .board {
   display: grid;
-  grid-template-columns: repeat(9, 1fr);
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  grid-template-rows: repeat(9, minmax(0, 1fr));
   width: min(92vw, 30rem);
   aspect-ratio: 1;
   margin-top: 1em;
@@ -40,7 +41,9 @@
 }
 
 .cell {
-  aspect-ratio: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   border: 1px solid var(--cell-border);
   text-align: center;
   font-size: clamp(1rem, 4.5vw, 1.5rem);
