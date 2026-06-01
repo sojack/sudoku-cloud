@@ -38,10 +38,10 @@ The path from the current proof-of-concept to a finished, daily-use app.
 - [x] New game / reset / erase controls
 - [x] localStorage persistence (resume on refresh)
 
-### Phase 3 — Puzzle variety
+### Phase 3 — Puzzle variety ✅
 
 - [x] Puzzle generator + solver with difficulty levels
-- [ ] "Make sudoku" mode: clear board, enter a puzzle, solve it
+- [x] "Make sudoku" mode: clear board, enter a puzzle, solve it
 
 ### Phase 4 — Polish
 
