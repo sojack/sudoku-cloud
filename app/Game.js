@@ -1,7 +1,6 @@
 'use client'
 import { useReducer, useMemo, useState, useEffect, useCallback } from 'react'
 import Board from './Board'
-import StatusBar from './StatusBar'
 import Keypad from './Keypad'
 import Controls from './Controls'
 import DifficultySelect from './DifficultySelect'
@@ -149,7 +148,6 @@ export default function Game() {
   return (
     <div className={styles.game}>
       <ThemeToggle />
-      <StatusBar mistakeCount={making ? null : mistakes.size} />
       {won && <p className={styles.win}>Solved! 🎉</p>}
       {making && (
         <p className={styles.makeHint}>
