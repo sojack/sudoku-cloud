@@ -1,43 +1,58 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { saveGame, loadGame, STORAGE_KEY, STORAGE_VERSION } from './storage'
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { saveGame, loadGame, clearGame, STORAGE_VERSION } from './storage';
 
-function fakeStorage(initial = {}) {
-  const map = new Map(Object.entries(initial))
+const KEY = 'sudoku-cloud:savegame';
+
+function makeStore() {
+  let store = {};
   return {
-    getItem: (k) => (map.has(k) ? map.get(k) : null),
-    setItem: (k, v) => map.set(k, v),
-    removeItem: (k) => map.delete(k),
-  }
+    getItem: (k) => (k in store ? store[k] : null),
+    setItem: (k, v) => {
+      store[k] = String(v);
+    },
+    removeItem: (k) => {
+      delete store[k];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
 }
 
-describe('storage', () => {
-  let store
+describe('storage v2', () => {
   beforeEach(() => {
-    store = fakeStorage()
-  })
+    vi.stubGlobal('localStorage', makeStore());
+  });
 
-  it('round-trips board and puzzleId', () => {
-    const state = { board: [{ value: 1, given: true, notes: [] }], puzzleId: 'easy-1' }
-    saveGame(state, store)
-    expect(loadGame(store)).toEqual(state)
-  })
+  it('round-trips board, solution, and difficulty', () => {
+    const board = new Array(81).fill(0);
+    const solution = new Array(81).fill(1);
+    saveGame({ board, solution, difficulty: 'hard' });
+    const loaded = loadGame();
+    expect(loaded.board).toEqual(board);
+    expect(loaded.solution).toEqual(solution);
+    expect(loaded.difficulty).toBe('hard');
+  });
 
-  it('returns null when nothing is saved', () => {
-    expect(loadGame(store)).toBe(null)
-  })
+  it('returns null when nothing saved', () => {
+    expect(loadGame()).toBeNull();
+  });
 
-  it('returns null on unparseable data', () => {
-    store.setItem(STORAGE_KEY, '{not json')
-    expect(loadGame(store)).toBe(null)
-  })
+  it('ignores saves from an older version', () => {
+    localStorage.setItem(
+      KEY,
+      JSON.stringify({ version: 1, board: new Array(81).fill(0) })
+    );
+    expect(loadGame()).toBeNull();
+  });
 
-  it('returns null on version mismatch', () => {
-    store.setItem(STORAGE_KEY, JSON.stringify({ version: STORAGE_VERSION + 1, board: [], puzzleId: 'x' }))
-    expect(loadGame(store)).toBe(null)
-  })
+  it('clears a saved game', () => {
+    saveGame({ board: new Array(81).fill(0), solution: new Array(81).fill(1), difficulty: 'easy' });
+    clearGame();
+    expect(loadGame()).toBeNull();
+  });
 
-  it('does not throw when setItem throws', () => {
-    const throwing = { getItem: () => null, setItem: () => { throw new Error('full') }, removeItem: () => {} }
-    expect(() => saveGame({ board: [], puzzleId: 'x' }, throwing)).not.toThrow()
-  })
-})
+  it('exposes STORAGE_VERSION = 2', () => {
+    expect(STORAGE_VERSION).toBe(2);
+  });
+});

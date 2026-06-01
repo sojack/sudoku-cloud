@@ -1,30 +1,31 @@
-// Versioned localStorage persistence for the in-progress game.
+const KEY = 'sudoku-cloud:savegame';
+export const STORAGE_VERSION = 2;
 
-export const STORAGE_KEY = 'sudoku-cloud:game'
-export const STORAGE_VERSION = 1
+export function saveGame({ board, solution, difficulty }) {
+  if (typeof localStorage === 'undefined') return;
+  const payload = JSON.stringify({
+    version: STORAGE_VERSION,
+    board,
+    solution,
+    difficulty,
+  });
+  localStorage.setItem(KEY, payload);
+}
 
-export function saveGame({ board, puzzleId }, storage = globalThis.localStorage) {
-  if (!storage) return
+export function loadGame() {
+  if (typeof localStorage === 'undefined') return null;
+  const raw = localStorage.getItem(KEY);
+  if (!raw) return null;
   try {
-    storage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ version: STORAGE_VERSION, board, puzzleId })
-    )
+    const data = JSON.parse(raw);
+    if (data.version !== STORAGE_VERSION) return null;
+    return { board: data.board, solution: data.solution, difficulty: data.difficulty };
   } catch {
-    // storage unavailable or full — ignore
+    return null;
   }
 }
 
-export function loadGame(storage = globalThis.localStorage) {
-  if (!storage) return null
-  const raw = storage.getItem(STORAGE_KEY)
-  if (raw == null) return null
-  let parsed
-  try {
-    parsed = JSON.parse(raw)
-  } catch {
-    return null
-  }
-  if (!parsed || parsed.version !== STORAGE_VERSION) return null
-  return { board: parsed.board, puzzleId: parsed.puzzleId }
+export function clearGame() {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.removeItem(KEY);
 }
