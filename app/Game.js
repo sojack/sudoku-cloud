@@ -5,6 +5,8 @@ import Keypad from './Keypad'
 import Controls from './Controls'
 import DifficultySelect from './DifficultySelect'
 import ThemeToggle from './ThemeToggle'
+import StatsPanel from './StatsPanel'
+import Toast from './Toast'
 import { createBoard } from './lib/board'
 import { boardReducer } from './lib/reducer'
 import { mistakes as findMistakes, remainingByDigit, isSolved } from './lib/validation'
@@ -12,22 +14,31 @@ import { sameNumberCells } from './lib/highlight'
 import { generate } from './lib/generator'
 import { validatePuzzle } from './lib/makepuzzle'
 import { loadGame, saveGame } from './lib/storage'
+import { loadStats, saveStats } from './lib/statsStorage'
+import { recordSolve, todayLocal } from './lib/stats'
 import styles from './page.module.css'
 
 const EMPTY_GIVENS = Array(81).fill(0)
 const DEFAULT_DIFFICULTY = 'medium'
 const NO_MISTAKES = new Set()
 
+// Monotonic id source for toast messages (module-level so it survives renders).
+let toastSeq = 0
+
 export default function Game() {
   const [board, dispatch] = useReducer(boardReducer, EMPTY_GIVENS, createBoard)
   const [givens, setGivens] = useState(EMPTY_GIVENS)
   const [solution, setSolution] = useState(EMPTY_GIVENS)
   const [difficulty, setDifficulty] = useState(DEFAULT_DIFFICULTY)
+  const [category, setCategory] = useState(DEFAULT_DIFFICULTY)
   const [selectedIndex, setSelectedIndex] = useState(null)
   const [notesMode, setNotesMode] = useState(false)
   const [ready, setReady] = useState(false)
   const [mode, setMode] = useState('play')
   const [makeMessage, setMakeMessage] = useState(null)
+  const [stats, setStats] = useState(null)
+  const [solveRecorded, setSolveRecorded] = useState(false)
+  const [toasts, setToasts] = useState([])
 
   const making = mode === 'make'
   const mistakes = useMemo(
@@ -44,6 +55,14 @@ export default function Game() {
     [ready, making, board, solution]
   )
 
+  const dismissToast = useCallback((id) => {
+    setToasts((list) => list.filter((t) => t.id !== id))
+  }, [])
+
+  const pushToast = useCallback((text) => {
+    setToasts((list) => [...list, { id: ++toastSeq, text }])
+  }, [])
+
   // Restore a saved game, or generate a fresh default puzzle. Used on mount
   // and when cancelling make mode.
   const loadOrGenerate = useCallback(() => {
@@ -52,6 +71,8 @@ export default function Game() {
       dispatch({ type: 'restore', board: saved.board })
       setSolution(saved.solution)
       if (saved.difficulty) setDifficulty(saved.difficulty)
+      setCategory(saved.category ?? saved.difficulty ?? DEFAULT_DIFFICULTY)
+      setSolveRecorded(saved.recorded ?? false)
       setGivens(saved.board.map((c) => (c.given ? c.value : 0)))
     } else {
       const p = generate(DEFAULT_DIFFICULTY)
@@ -59,20 +80,36 @@ export default function Game() {
       setGivens(p.givens)
       setSolution(p.solution)
       setDifficulty(p.difficulty)
+      setCategory(p.difficulty)
+      setSolveRecorded(false)
     }
   }, [])
 
-  // On mount: restore or generate.
+  // On mount: restore or generate, and load stats.
   useEffect(() => {
     loadOrGenerate()
+    setStats(loadStats())
     setReady(true)
   }, [loadOrGenerate])
 
-  // Persist after the game is ready — but never while making a puzzle.
+  // Persist the game after ready — but never while making a puzzle.
   useEffect(() => {
     if (!ready || making) return
-    saveGame({ board, solution, difficulty })
-  }, [ready, making, board, solution, difficulty])
+    saveGame({ board, solution, difficulty, category, recorded: solveRecorded })
+  }, [ready, making, board, solution, difficulty, category, solveRecorded])
+
+  // Record a solve exactly once per puzzle instance, then toast any new badges.
+  useEffect(() => {
+    if (!ready || making || !won || solveRecorded || !stats) return
+    const { stats: next, newBadges } = recordSolve(stats, {
+      category,
+      date: todayLocal(),
+    })
+    setStats(next)
+    saveStats(next)
+    setSolveRecorded(true)
+    for (const badge of newBadges) pushToast(`🏅 ${badge.label}!`)
+  }, [ready, making, won, solveRecorded, stats, category, pushToast])
 
   function handleDigit(d) {
     if (selectedIndex == null) return
@@ -89,12 +126,16 @@ export default function Game() {
     dispatch({ type: 'newGame', givens: p.givens })
     setGivens(p.givens)
     setSolution(p.solution)
+    setCategory(p.difficulty)
+    setSolveRecorded(false)
     setSelectedIndex(null)
   }
 
   function handleReset() {
     dispatch({ type: 'newGame', givens })
     setSelectedIndex(null)
+    // solveRecorded intentionally preserved — replaying the same puzzle must
+    // not re-count toward stats.
   }
 
   function handleMakeSudoku() {
@@ -119,6 +160,8 @@ export default function Game() {
     dispatch({ type: 'newGame', givens: entered })
     setGivens(entered)
     setSolution(result.solution)
+    setCategory('custom')
+    setSolveRecorded(false)
     setMode('play')
     setMakeMessage(null)
     setSelectedIndex(null)
@@ -148,6 +191,7 @@ export default function Game() {
   return (
     <div className={styles.game}>
       <ThemeToggle />
+      <Toast toasts={toasts} onDismiss={dismissToast} />
       {won && <p className={styles.win}>Solved! 🎉</p>}
       {making && (
         <p className={styles.makeHint}>
@@ -178,6 +222,7 @@ export default function Game() {
         onStart={handleStart}
         onCancel={handleCancel}
       />
+      {!making && stats && <StatsPanel stats={stats} />}
     </div>
   )
 }
