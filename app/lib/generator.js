@@ -1,10 +1,10 @@
 import { solve, countSolutions } from './solver';
 
-export const DIFFICULTIES = {
-  easy: { clues: 36 },
-  medium: { clues: 30 },
-  hard: { clues: 26 },
-};
+export const DIFFICULTIES = [
+  { key: 'easy', label: 'Easy', clues: 36 },
+  { key: 'medium', label: 'Medium', clues: 30 },
+  { key: 'hard', label: 'Hard', clues: 26 },
+];
 
 function shuffle(arr) {
   const a = arr.slice();
@@ -26,8 +26,10 @@ function randomSolution() {
 }
 
 export function generate(difficultyKey) {
-  const difficulty = DIFFICULTIES[difficultyKey] ? difficultyKey : 'medium';
-  const target = DIFFICULTIES[difficulty].clues;
+  const level =
+    DIFFICULTIES.find((d) => d.key === difficultyKey) ||
+    DIFFICULTIES.find((d) => d.key === 'medium');
+  const target = level.clues;
   const solution = randomSolution();
   const givens = solution.slice();
   // Dig in random order while keeping a unique solution + above target.
@@ -43,5 +45,5 @@ export function generate(difficultyKey) {
       givens[idx] = backup;
     }
   }
-  return { givens, solution, difficulty };
+  return { givens, solution, difficulty: level.key };
 }

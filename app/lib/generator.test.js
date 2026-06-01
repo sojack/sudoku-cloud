@@ -6,10 +6,21 @@ function countClues(board) {
   return board.filter((v) => v !== 0).length;
 }
 
+function difficulty(key) {
+  return DIFFICULTIES.find((d) => d.key === key);
+}
+
 describe('DIFFICULTIES', () => {
   it('defines easy, medium, hard with descending clue counts', () => {
-    expect(DIFFICULTIES.easy.clues).toBeGreaterThan(DIFFICULTIES.medium.clues);
-    expect(DIFFICULTIES.medium.clues).toBeGreaterThan(DIFFICULTIES.hard.clues);
+    expect(difficulty('easy').clues).toBeGreaterThan(difficulty('medium').clues);
+    expect(difficulty('medium').clues).toBeGreaterThan(difficulty('hard').clues);
+  });
+
+  it('gives every entry a non-empty string label', () => {
+    for (const d of DIFFICULTIES) {
+      expect(typeof d.label).toBe('string');
+      expect(d.label.length).toBeGreaterThan(0);
+    }
   });
 });
 
@@ -41,8 +52,9 @@ describe('generate', () => {
 
   it('hits roughly the right clue count for each difficulty', () => {
     const easy = generate('easy');
-    expect(countClues(easy.givens)).toBeGreaterThanOrEqual(DIFFICULTIES.easy.clues - 2);
-    expect(countClues(easy.givens)).toBeLessThanOrEqual(DIFFICULTIES.easy.clues + 6);
+    const target = difficulty('easy').clues;
+    expect(countClues(easy.givens)).toBeGreaterThanOrEqual(target - 2);
+    expect(countClues(easy.givens)).toBeLessThanOrEqual(target + 6);
   });
 
   it('defaults to medium for unknown difficulty', () => {
