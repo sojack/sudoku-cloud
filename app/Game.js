@@ -4,37 +4,55 @@ import Board from './Board'
 import StatusBar from './StatusBar'
 import Keypad from './Keypad'
 import Controls from './Controls'
+import DifficultySelect from './DifficultySelect'
 import { createBoard } from './lib/board'
 import { boardReducer } from './lib/reducer'
 import { mistakes as findMistakes, remainingByDigit, isSolved } from './lib/validation'
-import { nextPuzzleId, puzzleById } from './lib/puzzles'
+import { generate } from './lib/generator'
 import { loadGame, saveGame } from './lib/storage'
 import styles from './page.module.css'
 
-export default function Game({ puzzle }) {
-  const [board, dispatch] = useReducer(boardReducer, puzzle.givens, createBoard)
+const EMPTY_GIVENS = Array(81).fill(0)
+const DEFAULT_DIFFICULTY = 'medium'
+
+export default function Game() {
+  // First paint is a deterministic empty board (no generation during SSR).
+  const [board, dispatch] = useReducer(boardReducer, EMPTY_GIVENS, createBoard)
+  const [givens, setGivens] = useState(EMPTY_GIVENS)
+  const [solution, setSolution] = useState(EMPTY_GIVENS)
+  const [difficulty, setDifficulty] = useState(DEFAULT_DIFFICULTY)
   const [selectedIndex, setSelectedIndex] = useState(null)
   const [notesMode, setNotesMode] = useState(false)
-  const [puzzleId, setPuzzleId] = useState(puzzle.id)
+  const [ready, setReady] = useState(false)
 
-  const solution = useMemo(() => puzzleById(puzzleId).solution, [puzzleId])
   const mistakes = useMemo(() => findMistakes(board, solution), [board, solution])
   const remaining = useMemo(() => remainingByDigit(board), [board])
-  const won = useMemo(() => isSolved(board, solution), [board, solution])
+  const won = useMemo(() => ready && isSolved(board, solution), [ready, board, solution])
 
-  // Resume a saved game on mount (client only).
+  // On mount: restore a saved game, or generate a fresh default puzzle.
   useEffect(() => {
     const saved = loadGame()
-    if (saved && saved.board) {
+    if (saved && saved.board && saved.solution) {
       dispatch({ type: 'restore', board: saved.board })
-      if (saved.puzzleId) setPuzzleId(saved.puzzleId)
+      setSolution(saved.solution)
+      if (saved.difficulty) setDifficulty(saved.difficulty)
+      // Reconstruct givens from the restored board (given cells).
+      setGivens(saved.board.map((c) => (c.given ? c.value : 0)))
+    } else {
+      const p = generate(DEFAULT_DIFFICULTY)
+      dispatch({ type: 'newGame', givens: p.givens })
+      setGivens(p.givens)
+      setSolution(p.solution)
+      setDifficulty(p.difficulty)
     }
+    setReady(true)
   }, [])
 
-  // Persist on every board/puzzle change.
+  // Persist after the game is ready (skip the pre-generation empty board).
   useEffect(() => {
-    saveGame({ board, puzzleId })
-  }, [board, puzzleId])
+    if (!ready) return
+    saveGame({ board, solution, difficulty })
+  }, [ready, board, solution, difficulty])
 
   function handleDigit(d) {
     if (selectedIndex == null) return
@@ -47,14 +65,15 @@ export default function Game({ puzzle }) {
   }
 
   function handleNewGame() {
-    const id = nextPuzzleId(puzzleId)
-    dispatch({ type: 'newGame', givens: puzzleById(id).givens })
-    setPuzzleId(id)
+    const p = generate(difficulty)
+    dispatch({ type: 'newGame', givens: p.givens })
+    setGivens(p.givens)
+    setSolution(p.solution)
     setSelectedIndex(null)
   }
 
   function handleReset() {
-    dispatch({ type: 'newGame', givens: puzzleById(puzzleId).givens })
+    dispatch({ type: 'newGame', givens })
     setSelectedIndex(null)
   }
 
@@ -89,6 +108,7 @@ export default function Game({ puzzle }) {
         onErase={handleErase}
         onToggleNotes={() => setNotesMode((m) => !m)}
       />
+      <DifficultySelect value={difficulty} onChange={setDifficulty} />
       <Controls onNewGame={handleNewGame} onReset={handleReset} />
     </div>
   )
