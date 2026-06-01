@@ -40,7 +40,7 @@ The path from the current proof-of-concept to a finished, daily-use app.
 
 ### Phase 3 — Puzzle variety
 
-- [ ] Puzzle generator + solver with difficulty levels
+- [x] Puzzle generator + solver with difficulty levels
 - [ ] "Make sudoku" mode: clear board, enter a puzzle, solve it
 
 ### Phase 4 — Polish
