@@ -50,6 +50,13 @@ The path from the current proof-of-concept to a finished, daily-use app.
 - [x] ~~Timer, hint button, undo / redo~~ — intentionally dropped (not wanted)
 - [x] ~~Keyboard navigation between cells~~ — intentionally dropped (not wanted)
 
+### Phase 5 — Progress & stats ✅
+
+- [x] Solved-puzzle counts (total + per category: easy/medium/hard/custom)
+- [x] Daily streak (consecutive days with a solve)
+- [x] Milestone badges (total solved + solves-in-a-day), celebrated with a toast
+- [x] localStorage-backed, structured for a future per-user login
+
 ## History
 
 Original scratch to-do (superseded by the roadmap above):
