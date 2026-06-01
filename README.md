@@ -43,12 +43,12 @@ The path from the current proof-of-concept to a finished, daily-use app.
 - [x] Puzzle generator + solver with difficulty levels
 - [x] "Make sudoku" mode: clear board, enter a puzzle, solve it
 
-### Phase 4 — Polish
+### Phase 4 — Polish ✅
 
 - [x] Styling pass + dark mode + mobile layout
-- [ ] Timer, hint button, undo / redo
 - [x] Highlight peers / same-numbers
-- [ ] Keyboard navigation between cells
+- [x] ~~Timer, hint button, undo / redo~~ — intentionally dropped (not wanted)
+- [x] ~~Keyboard navigation between cells~~ — intentionally dropped (not wanted)
 
 ## History
 
