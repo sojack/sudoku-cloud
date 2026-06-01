@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { saveGame, loadGame, STORAGE_VERSION } from './storage'
+import { saveGame, loadGame, clearGame, STORAGE_VERSION } from './storage'
 
 function mockLocalStorage() {
   const store = new Map()
@@ -36,6 +36,20 @@ describe('savegame persistence', () => {
       'sudoku-cloud:savegame',
       JSON.stringify({ version: 2, board: [], solution: [] })
     )
+    expect(loadGame()).toBe(null)
+  })
+  it('returns null when nothing is saved', () => {
+    expect(loadGame()).toBe(null)
+  })
+  it('clears a saved game', () => {
+    saveGame({
+      board: [{ value: 1, given: true, notes: [] }],
+      solution: [1],
+      difficulty: 'easy',
+      category: 'easy',
+      recorded: false,
+    })
+    clearGame()
     expect(loadGame()).toBe(null)
   })
 })
