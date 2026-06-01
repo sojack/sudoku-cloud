@@ -251,3 +251,63 @@
     padding: 0.55rem 0.7rem;
   }
 }
+
+.stats {
+  margin-top: 1.5rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.statsToggle {
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--cell-border);
+  border-radius: 6px;
+}
+
+.statsBody {
+  margin-top: 0.75rem;
+  width: 100%;
+  text-align: center;
+}
+
+.statLine {
+  margin: 0.25rem 0;
+  color: var(--text);
+  font-weight: bold;
+}
+
+.statBreakdown {
+  margin: 0.25rem 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.badgeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.badge {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--cell-border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.badgeEarned {
+  background: var(--accent-bg);
+  color: var(--text);
+  font-weight: bold;
+}
+
+.badgeLocked {
+  color: var(--muted);
+  opacity: 0.5;
+}
