@@ -47,7 +47,7 @@ The path from the current proof-of-concept to a finished, daily-use app.
 
 - [x] Styling pass + dark mode + mobile layout
 - [ ] Timer, hint button, undo / redo
-- [ ] Highlight peers / same-numbers
+- [x] Highlight peers / same-numbers
 - [ ] Keyboard navigation between cells
 
 ## History
