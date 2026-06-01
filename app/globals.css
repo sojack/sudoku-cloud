@@ -1,8 +1,58 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Light — "Soft Warm" */
+  --bg: #faf7f0;
+  --surface: #efe9da;
+  --text: #3a3326;
+  --muted: #7c6f57;
+  --ink-given: #3a3326;
+  --ink-entry: #5b54c9;
+  --cell-border: #e3dcc9;
+  --box-border: #7c6f57;
+  --sel-bg: #e8e6fb;
+  --peer-bg: #f0ece0; /* reserved for the peer-highlight cycle */
+  --mistake-fg: #c0392b;
+  --mistake-bg: #f7e3df;
+  --accent-bg: #e8e6fb;
+  --win: #3a7d44;
 }
 
+/* Dark — "Cool Slate". Applied when the user has explicitly chosen dark... */
+:root[data-theme='dark'] {
+  --bg: #1a1d24;
+  --surface: #272b34;
+  --text: #e6e9f0;
+  --muted: #7e879b;
+  --ink-given: #f2f4f9;
+  --ink-entry: #8d9bff;
+  --cell-border: #3a3f4b;
+  --box-border: #7e879b;
+  --sel-bg: #2d3358;
+  --peer-bg: #23272f;
+  --mistake-fg: #ff8f8f;
+  --mistake-bg: #3f2330;
+  --accent-bg: #2d3358;
+  --win: #7fd68b;
+}
+
+/* ...or when the OS prefers dark AND no explicit theme is set. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #1a1d24;
+    --surface: #272b34;
+    --text: #e6e9f0;
+    --muted: #7e879b;
+    --ink-given: #f2f4f9;
+    --ink-entry: #8d9bff;
+    --cell-border: #3a3f4b;
+    --box-border: #7e879b;
+    --sel-bg: #2d3358;
+    --peer-bg: #23272f;
+    --mistake-fg: #ff8f8f;
+    --mistake-bg: #3f2330;
+    --accent-bg: #2d3358;
+    --win: #7fd68b;
+  }
+}
 
 html,
 body {
@@ -11,8 +61,8 @@ body {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--text);
+  background: var(--bg);
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
