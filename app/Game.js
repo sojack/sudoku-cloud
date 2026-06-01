@@ -6,7 +6,7 @@ import Keypad from './Keypad'
 import Controls from './Controls'
 import { createBoard } from './lib/board'
 import { boardReducer } from './lib/reducer'
-import { conflicts as findConflicts, remainingByDigit, isWon } from './lib/validation'
+import { mistakes as findMistakes, remainingByDigit, isSolved } from './lib/validation'
 import { nextPuzzleId, puzzleById } from './lib/puzzles'
 import { loadGame, saveGame } from './lib/storage'
 import styles from './page.module.css'
@@ -17,9 +17,10 @@ export default function Game({ puzzle }) {
   const [notesMode, setNotesMode] = useState(false)
   const [puzzleId, setPuzzleId] = useState(puzzle.id)
 
-  const conflicts = useMemo(() => findConflicts(board), [board])
+  const solution = useMemo(() => puzzleById(puzzleId).solution, [puzzleId])
+  const mistakes = useMemo(() => findMistakes(board, solution), [board, solution])
   const remaining = useMemo(() => remainingByDigit(board), [board])
-  const won = useMemo(() => isWon(board), [board])
+  const won = useMemo(() => isSolved(board, solution), [board, solution])
 
   // Resume a saved game on mount (client only).
   useEffect(() => {
@@ -73,11 +74,11 @@ export default function Game({ puzzle }) {
 
   return (
     <div className={styles.game}>
-      <StatusBar conflictCount={conflicts.size} />
+      <StatusBar mistakeCount={mistakes.size} />
       {won && <p className={styles.win}>Solved! 🎉</p>}
       <Board
         board={board}
-        conflicts={conflicts}
+        mistakes={mistakes}
         selectedIndex={selectedIndex}
         onSelect={setSelectedIndex}
       />
