@@ -1,4 +1,5 @@
 import "./globals.css";
+import { AuthProvider } from './AuthProvider';
 
 export const metadata = {
   title: "Sudoku Cloud",
@@ -17,7 +18,7 @@ export default function RootLayout({ children }) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
