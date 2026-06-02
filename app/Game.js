@@ -7,6 +7,11 @@ import DifficultySelect from './DifficultySelect'
 import ThemeToggle from './ThemeToggle'
 import StatsPanel from './StatsPanel'
 import Toast from './Toast'
+import AccountMenu from './AccountMenu'
+import { useAuth } from './AuthProvider'
+import { getSupabase } from './lib/supabase'
+import { syncState, pushRemote } from './lib/sync'
+import { clearGame } from './lib/storage'
 import { createBoard } from './lib/board'
 import { boardReducer } from './lib/reducer'
 import { mistakes as findMistakes, remainingByDigit, isSolved } from './lib/validation'
@@ -39,6 +44,9 @@ export default function Game() {
   const [stats, setStats] = useState(null)
   const [solveRecorded, setSolveRecorded] = useState(false)
   const [toasts, setToasts] = useState([])
+
+  const auth = useAuth()
+  const [syncStatus, setSyncStatus] = useState(null)
 
   const making = mode === 'make'
   const mistakes = useMemo(
@@ -110,6 +118,60 @@ export default function Game() {
     setSolveRecorded(true)
     for (const badge of newBadges) pushToast(`🏅 ${badge.label}!`)
   }, [ready, making, won, solveRecorded, stats, category, pushToast])
+
+  // On sign-in (or load with an existing session): reconcile local with the
+  // cloud, then adopt the merged result locally and in the UI.
+  const userId = auth?.user?.id ?? null
+  useEffect(() => {
+    if (!ready || !userId) return
+    const client = getSupabase()
+    if (!client) return
+    let cancelled = false
+    setSyncStatus('syncing')
+    syncState(client, userId, { savegame: loadGame(), stats: loadStats() })
+      .then((merged) => {
+        if (cancelled) return
+        if (merged.stats) {
+          saveStats(merged.stats)
+          setStats(merged.stats)
+        }
+        if (merged.savegame && merged.savegame.board && merged.savegame.solution) {
+          saveGame(merged.savegame)
+          dispatch({ type: 'restore', board: merged.savegame.board })
+          setSolution(merged.savegame.solution)
+          if (merged.savegame.difficulty) setDifficulty(merged.savegame.difficulty)
+          setCategory(merged.savegame.category ?? merged.savegame.difficulty ?? DEFAULT_DIFFICULTY)
+          setSolveRecorded(merged.savegame.recorded ?? false)
+          setGivens(merged.savegame.board.map((c) => (c.given ? c.value : 0)))
+        }
+        setSyncStatus('synced')
+      })
+      .catch(() => {
+        if (!cancelled) setSyncStatus('offline')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [ready, userId])
+
+  // Debounced push of local changes to the cloud while signed in. Skips while
+  // making a puzzle (consistent with the local-save effect).
+  useEffect(() => {
+    if (!ready || making || !userId || syncStatus == null) return
+    const client = getSupabase()
+    if (!client) return
+    const id = setTimeout(() => {
+      pushRemote(client, userId, { savegame: loadGame(), stats: loadStats() })
+        .then(() => setSyncStatus('synced'))
+        .catch(() => setSyncStatus('offline'))
+    }, 1500)
+    return () => clearTimeout(id)
+  }, [ready, making, userId, board, solution, difficulty, category, solveRecorded, stats])
+
+  // When the user signs out, stop syncing. Local cache and play are untouched.
+  useEffect(() => {
+    if (!userId) setSyncStatus(null)
+  }, [userId])
 
   function handleDigit(d) {
     if (selectedIndex == null) return
@@ -191,6 +253,7 @@ export default function Game() {
   return (
     <div className={styles.game}>
       <ThemeToggle />
+      <AccountMenu syncStatus={syncStatus} />
       <Toast toasts={toasts} onDismiss={dismissToast} />
       {won && <p className={styles.win}>Solved! 🎉</p>}
       {making && (
