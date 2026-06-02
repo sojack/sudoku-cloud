@@ -31,17 +31,20 @@ export default function StatsPanel({ stats }) {
             {stats.solved.hard} · Custom {stats.solved.custom}
           </p>
           <div className={styles.badgeGrid}>
-            {BADGES.map((b) => (
-              <div
-                key={b.id}
-                className={`${styles.badge} ${
-                  earned.has(b.id) ? styles.badgeEarned : styles.badgeLocked
-                }`}
-                title={b.label}
-              >
-                {b.label}
-              </div>
-            ))}
+            {BADGES.map((b) => {
+              const isEarned = earned.has(b.id)
+              return (
+                <div
+                  key={b.id}
+                  className={`${styles.badge} ${
+                    isEarned ? styles.badgeEarned : styles.badgeLocked
+                  }`}
+                  title={isEarned ? b.label : undefined}
+                >
+                  {isEarned ? b.label : 'Badge'}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
