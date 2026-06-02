@@ -44,6 +44,19 @@ True cross-device durability and eviction resistance is the future
 login/user-system path the code is already shaped for (the `recorded` flag and
 per-category counts migrate cleanly to a backend).
 
+## Cloud sync (accounts)
+
+Optional. With no account the app is local-only, exactly as described above.
+Signing in (email + password) turns on cross-device sync via Supabase:
+
+- State lives in a single `game_state` row per user (RLS-protected) holding the
+  `savegame` and `stats` blobs. Theme stays device-local.
+- **Conflict rule:** the most recently saved board wins; stats merge
+  non-destructively (max solved counts, union badges, later-dated streak/daily),
+  so a solve is never lost.
+- Setup: copy `.env.example` → `.env.local`, fill in the Supabase URL + anon
+  key, and apply `supabase/migrations/0001_game_state.sql` to your project.
+
 ## Roadmap
 
 The path from the current proof-of-concept to a finished, daily-use app.
@@ -83,6 +96,13 @@ The path from the current proof-of-concept to a finished, daily-use app.
 - [x] Daily streak (consecutive days with a solve)
 - [x] Milestone badges (total solved + solves-in-a-day), celebrated with a toast
 - [x] localStorage-backed, structured for a future per-user login
+
+### Phase 6 — Accounts & cross-device sync ✅
+
+- [x] Email + password auth (Supabase), guest play still default
+- [x] Per-user cloud state with row-level security
+- [x] Non-destructive stats merge + newest-board-wins conflict resolution
+- [x] Offline-first: local cache unchanged, syncs on reconnect
 
 ### Future — Native iOS app (maybe)
 
