@@ -10,6 +10,8 @@
   --box-border: #7c6f57;
   --sel-bg: #ff8fc4; /* selected cell — hotpink tint */
   --peer-bg: #ffc2dd; /* matching numbers — deeppink tint */
+  --note-ink: #5c5340; /* pencil marks on the normal cell background */
+  --highlight-ink: #1a1320; /* glyphs sitting on a highlight (sel/peer) bg */
   --mistake-fg: #c0392b;
   --mistake-bg: #f7e3df;
   --accent-bg: #e8e6fb;
@@ -28,6 +30,7 @@
   --box-border: #7e879b;
   --sel-bg: hotpink;
   --peer-bg: deeppink;
+  --note-ink: #aeb6c9;
   --mistake-fg: #ff8f8f;
   --mistake-bg: #3f2330;
   --accent-bg: #2d3358;
@@ -47,6 +50,7 @@
     --box-border: #7e879b;
     --sel-bg: hotpink;
     --peer-bg: deeppink;
+    --note-ink: #aeb6c9;
     --mistake-fg: #ff8f8f;
     --mistake-bg: #3f2330;
     --accent-bg: #2d3358;

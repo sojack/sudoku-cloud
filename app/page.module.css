@@ -49,6 +49,7 @@
   font-size: clamp(1rem, 4.5vw, 1.5rem);
   color: var(--text);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-variant-numeric: tabular-nums;
   font-weight: bold;
   background: none;
   padding: 0;
@@ -110,6 +111,17 @@
   background: var(--sel-bg);
 }
 
+/* Glyphs on a highlight background use one high-contrast ink (AA on every
+   highlight shade), overriding the given/input/note colors. */
+.sameNumber,
+.selected {
+  color: var(--highlight-ink);
+}
+.sameNumber .noteCell,
+.selected .noteCell {
+  color: var(--highlight-ink);
+}
+
 .notes {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -119,9 +131,10 @@
 }
 
 .noteCell {
-  font-size: clamp(0.5rem, 1.6vw, 0.6rem);
+  font-size: clamp(0.6rem, 2vw, 0.75rem);
   line-height: 1;
-  color: var(--muted);
+  font-weight: bold;
+  color: var(--note-ink);
   display: flex;
   align-items: center;
   justify-content: center;
