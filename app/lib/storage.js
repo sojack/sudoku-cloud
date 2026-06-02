@@ -10,6 +10,7 @@ export function saveGame({ board, solution, difficulty, category, recorded }) {
     difficulty,
     category,
     recorded,
+    savedAt: Date.now(),
   });
   localStorage.setItem(KEY, payload);
 }
@@ -27,6 +28,7 @@ export function loadGame() {
       difficulty: data.difficulty,
       category: data.category ?? data.difficulty ?? null,
       recorded: data.recorded ?? false,
+      savedAt: data.savedAt ?? 0,
     };
   } catch {
     return null;

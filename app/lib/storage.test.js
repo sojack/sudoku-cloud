@@ -52,4 +52,17 @@ describe('savegame persistence', () => {
     clearGame()
     expect(loadGame()).toBe(null)
   })
+  it('stamps savedAt when saving and returns it on load', () => {
+    saveGame({ board: [], solution: [], difficulty: 'easy', category: 'easy', recorded: false })
+    const loaded = loadGame()
+    expect(typeof loaded.savedAt).toBe('number')
+    expect(loaded.savedAt).toBeGreaterThan(0)
+  })
+  it('defaults savedAt to 0 for a legacy save written without it', () => {
+    localStorage.setItem(
+      'sudoku-cloud:savegame',
+      JSON.stringify({ version: STORAGE_VERSION, board: [], solution: [], difficulty: 'easy' })
+    )
+    expect(loadGame().savedAt).toBe(0)
+  })
 })
