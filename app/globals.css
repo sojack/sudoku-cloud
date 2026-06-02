@@ -8,8 +8,8 @@
   --ink-entry: #5b54c9;
   --cell-border: #e3dcc9;
   --box-border: #7c6f57;
-  --sel-bg: #e8e6fb;
-  --peer-bg: #f0ece0; /* reserved for the peer-highlight cycle */
+  --sel-bg: #ff8fc4; /* selected cell — hotpink tint */
+  --peer-bg: #ffc2dd; /* matching numbers — deeppink tint */
   --mistake-fg: #c0392b;
   --mistake-bg: #f7e3df;
   --accent-bg: #e8e6fb;
@@ -26,8 +26,8 @@
   --ink-entry: #8d9bff;
   --cell-border: #3a3f4b;
   --box-border: #7e879b;
-  --sel-bg: #2d3358;
-  --peer-bg: #23272f;
+  --sel-bg: hotpink;
+  --peer-bg: deeppink;
   --mistake-fg: #ff8f8f;
   --mistake-bg: #3f2330;
   --accent-bg: #2d3358;
@@ -45,8 +45,8 @@
     --ink-entry: #8d9bff;
     --cell-border: #3a3f4b;
     --box-border: #7e879b;
-    --sel-bg: #2d3358;
-    --peer-bg: #23272f;
+    --sel-bg: hotpink;
+    --peer-bg: deeppink;
     --mistake-fg: #ff8f8f;
     --mistake-bg: #3f2330;
     --accent-bg: #2d3358;
