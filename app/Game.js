@@ -37,7 +37,7 @@ export default function Game() {
   const [difficulty, setDifficulty] = useState(DEFAULT_DIFFICULTY)
   const [category, setCategory] = useState(DEFAULT_DIFFICULTY)
   const [selectedIndex, setSelectedIndex] = useState(null)
-  const [lastDigit, setLastDigit] = useState(null)
+  const [highlightDigit, setHighlightDigit] = useState(null)
   const [notesMode, setNotesMode] = useState(false)
   const [ready, setReady] = useState(false)
   const [mode, setMode] = useState('play')
@@ -58,15 +58,14 @@ export default function Game() {
     () => (making ? NO_MISTAKES : findMistakes(board, solution)),
     [making, board, solution]
   )
-  // Same-number highlighting persists the last digit under the cursor: when an
-  // empty or notes-only cell is selected, the previously highlighted number
-  // stays lit until another numbered cell is selected. `highlightDigit` falls
-  // back to the remembered `lastDigit`; nothing highlights with no selection.
-  const selectedValue = selectedIndex != null ? board[selectedIndex].value : null
-  const highlightDigit = selectedIndex == null ? null : selectedValue ?? lastDigit
+  // Same-number highlighting tracks an explicit `highlightDigit` that persists
+  // across empty / notes-only selections and toggles: clicking a numbered cell
+  // lights its digit, clicking it again (or any cell of the lit digit) clears.
+  // Gated by selection so nothing highlights when no cell is selected.
+  const activeDigit = selectedIndex == null ? null : highlightDigit
   const sameNumber = useMemo(
-    () => sameNumberCellsForDigit(board, highlightDigit, selectedIndex),
-    [board, highlightDigit, selectedIndex]
+    () => sameNumberCellsForDigit(board, activeDigit, selectedIndex),
+    [board, activeDigit, selectedIndex]
   )
   const remaining = useMemo(() => remainingByDigit(board), [board])
   const won = useMemo(
@@ -137,13 +136,11 @@ export default function Game() {
     setReady(true)
   }, [loadOrGenerate])
 
-  // Remember the digit under the cursor so same-number highlighting persists
-  // when an empty / notes-only cell is selected. Clears when selection clears
-  // (e.g. a new puzzle), so a stale digit never bleeds across games.
+  // Clear the highlighted digit when the selection clears (e.g. a new puzzle),
+  // so a stale digit never bleeds across games.
   useEffect(() => {
-    if (selectedIndex == null) setLastDigit(null)
-    else if (selectedValue != null) setLastDigit(selectedValue)
-  }, [selectedIndex, selectedValue])
+    if (selectedIndex == null) setHighlightDigit(null)
+  }, [selectedIndex])
 
   // Load the persisted hide-notes display preference (device-local) and reflect
   // it on the document so a single CSS rule can hide the pencil marks.
@@ -229,9 +226,23 @@ export default function Game() {
     if (!userId) setSyncStatus(null)
   }, [userId])
 
+  // Select a cell. Clicking a numbered cell toggles its digit's highlight
+  // (lit → cleared); clicking an empty / notes-only cell keeps the current
+  // highlight, so it persists across such selections.
+  function handleSelect(index) {
+    setSelectedIndex(index)
+    const value = board[index].value
+    if (value != null) setHighlightDigit((prev) => (prev === value ? null : value))
+  }
+
   function handleDigit(d) {
     if (selectedIndex == null) return
-    dispatchAndStamp({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: d })
+    if (notesMode) {
+      dispatchAndStamp({ type: 'toggleNote', index: selectedIndex, value: d })
+    } else {
+      dispatchAndStamp({ type: 'setValue', index: selectedIndex, value: d })
+      setHighlightDigit(d)
+    }
   }
 
   function handleErase() {
@@ -297,7 +308,9 @@ export default function Game() {
     function onKeyDown(e) {
       if (selectedIndex == null) return
       if (e.key >= '1' && e.key <= '9') {
-        dispatchAndStamp({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: Number(e.key) })
+        const d = Number(e.key)
+        dispatchAndStamp({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: d })
+        if (!notesMode) setHighlightDigit(d)
       } else if (e.key === 'Backspace' || e.key === 'Delete') {
         dispatchAndStamp({ type: 'clearCell', index: selectedIndex })
       }
@@ -323,7 +336,7 @@ export default function Game() {
         mistakes={mistakes}
         sameNumber={sameNumber}
         selectedIndex={selectedIndex}
-        onSelect={setSelectedIndex}
+        onSelect={handleSelect}
       />
       <Keypad
         remaining={remaining}
