@@ -1,0 +1,53 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 100;
+}
+
+.dialog {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--cell-border);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  max-width: 22rem;
+  width: 100%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.message {
+  margin: 0 0 1.1rem;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.cancel,
+.confirm {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 1px solid var(--cell-border);
+}
+
+.cancel {
+  background: transparent;
+  color: var(--text);
+}
+
+.confirm {
+  background: var(--ink-entry);
+  color: #fff;
+  border-color: var(--ink-entry);
+}

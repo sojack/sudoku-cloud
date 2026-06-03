@@ -8,12 +8,13 @@ import ThemeToggle from './ThemeToggle'
 import StatsPanel from './StatsPanel'
 import Toast from './Toast'
 import AccountMenu from './AccountMenu'
+import ConfirmDialog from './ConfirmDialog'
 import { useAuth } from './AuthProvider'
 import { getSupabase } from './lib/supabase'
 import { syncState, pushRemote } from './lib/sync'
 import { createBoard } from './lib/board'
 import { boardReducer } from './lib/reducer'
-import { mistakes as findMistakes, remainingByDigit, isSolved, lockedCells } from './lib/validation'
+import { mistakes as findMistakes, remainingByDigit, isSolved, lockedCells, hasEntries } from './lib/validation'
 import { sameNumberCellsForDigit } from './lib/highlight'
 import { generate } from './lib/generator'
 import { validatePuzzle } from './lib/makepuzzle'
@@ -46,6 +47,7 @@ export default function Game() {
   const [solveRecorded, setSolveRecorded] = useState(false)
   const [toasts, setToasts] = useState([])
   const [notesHidden, setNotesHidden] = useState(false)
+  const [confirm, setConfirm] = useState(null) // { message, onConfirm } | null
 
   const auth = useAuth()
   const [syncStatus, setSyncStatus] = useState(null)
@@ -256,6 +258,22 @@ export default function Game() {
     dispatchAndStamp({ type: 'clearCell', index: selectedIndex })
   }
 
+  // Run a board-clearing action immediately, or, when there's progress to
+  // lose, ask for confirmation through the in-app modal first.
+  function confirmDestructive(action, message) {
+    if (hasEntries(board)) {
+      setConfirm({
+        message,
+        onConfirm: () => {
+          setConfirm(null)
+          action()
+        },
+      })
+    } else {
+      action()
+    }
+  }
+
   function handleNewGame() {
     const p = generate(difficulty)
     dispatchAndStamp({ type: 'newGame', givens: p.givens })
@@ -312,7 +330,7 @@ export default function Game() {
   // Physical keyboard on the selected cell.
   useEffect(() => {
     function onKeyDown(e) {
-      if (selectedIndex == null || locked.has(selectedIndex)) return
+      if (confirm || selectedIndex == null || locked.has(selectedIndex)) return
       if (e.key >= '1' && e.key <= '9') {
         const d = Number(e.key)
         dispatchAndStamp({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: d })
@@ -323,7 +341,7 @@ export default function Game() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedIndex, notesMode, dispatchAndStamp, locked])
+  }, [selectedIndex, notesMode, dispatchAndStamp, locked, confirm])
 
   return (
     <div className={styles.game}>
@@ -356,12 +374,25 @@ export default function Game() {
       {!making && <DifficultySelect value={difficulty} onChange={setDifficulty} />}
       <Controls
         mode={mode}
-        onNewGame={handleNewGame}
-        onReset={handleReset}
-        onMakeSudoku={handleMakeSudoku}
+        onNewGame={() =>
+          confirmDestructive(handleNewGame, 'Start a new puzzle? Your current progress will be lost.')
+        }
+        onReset={() =>
+          confirmDestructive(handleReset, 'Reset the board? All your entries will be cleared.')
+        }
+        onMakeSudoku={() =>
+          confirmDestructive(handleMakeSudoku, 'Make a new puzzle? Your current progress will be lost.')
+        }
         onStart={handleStart}
         onCancel={handleCancel}
       />
+      {confirm && (
+        <ConfirmDialog
+          message={confirm.message}
+          onConfirm={confirm.onConfirm}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
       {!making && stats && <StatsPanel stats={stats} />}
     </div>
   )
