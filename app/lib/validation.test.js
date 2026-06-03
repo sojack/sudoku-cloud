@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mistakes, isSolved, remainingByDigit, lockedCells } from './validation'
+import { mistakes, isSolved, remainingByDigit, lockedCells, hasEntries } from './validation'
 import { createBoard } from './board'
 
 function emptyGivens() {
@@ -98,6 +98,26 @@ describe('lockedCells', () => {
     givens[0] = solution[0]
     const board = createBoard(givens)
     expect(lockedCells(board, solution).has(0)).toBe(false)
+  })
+})
+
+describe('hasEntries', () => {
+  it('is false on a board with only givens (or empty)', () => {
+    const givens = emptyGivens()
+    givens[0] = 5
+    expect(hasEntries(createBoard(givens))).toBe(false)
+  })
+
+  it('is true once a value is placed in a non-given cell', () => {
+    const board = createBoard(emptyGivens())
+    board[0] = { value: 4, given: false, notes: [] }
+    expect(hasEntries(board)).toBe(true)
+  })
+
+  it('is true once a note is placed in a non-given cell', () => {
+    const board = createBoard(emptyGivens())
+    board[0] = { value: null, given: false, notes: [3] }
+    expect(hasEntries(board)).toBe(true)
   })
 })
 

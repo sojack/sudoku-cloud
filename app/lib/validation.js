@@ -33,6 +33,12 @@ export function isSolved(board, solution) {
   return board.every((cell, i) => cell.value === solution[i])
 }
 
+// True when the player has placed at least one value or note in a non-given
+// cell — i.e. there is progress a reset / new game would discard.
+export function hasEntries(board) {
+  return board.some((cell) => !cell.given && (cell.value != null || cell.notes.length > 0))
+}
+
 // Indices of non-given cells whose value already matches the solution. These
 // are "locked" — correct entries the player should not be able to edit by
 // mistake. Givens are excluded; they are immutable by their own rule.
