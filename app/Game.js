@@ -13,7 +13,7 @@ import { getSupabase } from './lib/supabase'
 import { syncState, pushRemote } from './lib/sync'
 import { createBoard } from './lib/board'
 import { boardReducer } from './lib/reducer'
-import { mistakes as findMistakes, remainingByDigit, isSolved } from './lib/validation'
+import { mistakes as findMistakes, remainingByDigit, isSolved, lockedCells } from './lib/validation'
 import { sameNumberCellsForDigit } from './lib/highlight'
 import { generate } from './lib/generator'
 import { validatePuzzle } from './lib/makepuzzle'
@@ -56,6 +56,12 @@ export default function Game() {
   const making = mode === 'make'
   const mistakes = useMemo(
     () => (making ? NO_MISTAKES : findMistakes(board, solution)),
+    [making, board, solution]
+  )
+  // Correct entries lock so they can't be edited by mistake. Disabled in make
+  // mode (no solution yet), mirroring how mistakes are suppressed there.
+  const locked = useMemo(
+    () => (making ? NO_MISTAKES : lockedCells(board, solution)),
     [making, board, solution]
   )
   // Same-number highlighting tracks an explicit `highlightDigit` that persists
@@ -236,7 +242,7 @@ export default function Game() {
   }
 
   function handleDigit(d) {
-    if (selectedIndex == null) return
+    if (selectedIndex == null || locked.has(selectedIndex)) return
     if (notesMode) {
       dispatchAndStamp({ type: 'toggleNote', index: selectedIndex, value: d })
     } else {
@@ -246,7 +252,7 @@ export default function Game() {
   }
 
   function handleErase() {
-    if (selectedIndex == null) return
+    if (selectedIndex == null || locked.has(selectedIndex)) return
     dispatchAndStamp({ type: 'clearCell', index: selectedIndex })
   }
 
@@ -306,7 +312,7 @@ export default function Game() {
   // Physical keyboard on the selected cell.
   useEffect(() => {
     function onKeyDown(e) {
-      if (selectedIndex == null) return
+      if (selectedIndex == null || locked.has(selectedIndex)) return
       if (e.key >= '1' && e.key <= '9') {
         const d = Number(e.key)
         dispatchAndStamp({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: d })
@@ -317,7 +323,7 @@ export default function Game() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedIndex, notesMode, dispatchAndStamp])
+  }, [selectedIndex, notesMode, dispatchAndStamp, locked])
 
   return (
     <div className={styles.game}>

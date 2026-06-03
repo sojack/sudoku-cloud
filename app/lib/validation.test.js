@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mistakes, isSolved, remainingByDigit } from './validation'
+import { mistakes, isSolved, remainingByDigit, lockedCells } from './validation'
 import { createBoard } from './board'
 
 function emptyGivens() {
@@ -68,6 +68,36 @@ describe('isSolved', () => {
     const solution = refSolution()
     const board = solution.map((v) => ({ value: v, given: false, notes: [] }))
     expect(isSolved(board, solution)).toBe(true)
+  })
+})
+
+describe('lockedCells', () => {
+  it('locks a non-given cell whose value matches the solution', () => {
+    const solution = refSolution()
+    const board = createBoard(emptyGivens())
+    board[0] = { value: solution[0], given: false, notes: [] }
+    expect(lockedCells(board, solution).has(0)).toBe(true)
+  })
+
+  it('does not lock an incorrect entry', () => {
+    const solution = refSolution()
+    const board = createBoard(emptyGivens())
+    board[0] = { value: solution[0] === 1 ? 2 : 1, given: false, notes: [] }
+    expect(lockedCells(board, solution).has(0)).toBe(false)
+  })
+
+  it('does not lock empty cells', () => {
+    const solution = refSolution()
+    const board = createBoard(emptyGivens())
+    expect(lockedCells(board, solution).size).toBe(0)
+  })
+
+  it('does not include given cells (they are handled separately)', () => {
+    const solution = refSolution()
+    const givens = emptyGivens()
+    givens[0] = solution[0]
+    const board = createBoard(givens)
+    expect(lockedCells(board, solution).has(0)).toBe(false)
   })
 })
 
