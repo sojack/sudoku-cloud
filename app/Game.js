@@ -14,7 +14,7 @@ import { syncState, pushRemote } from './lib/sync'
 import { createBoard } from './lib/board'
 import { boardReducer } from './lib/reducer'
 import { mistakes as findMistakes, remainingByDigit, isSolved } from './lib/validation'
-import { sameNumberCells } from './lib/highlight'
+import { sameNumberCellsForDigit } from './lib/highlight'
 import { generate } from './lib/generator'
 import { validatePuzzle } from './lib/makepuzzle'
 import { loadGame, saveGame } from './lib/storage'
@@ -37,6 +37,7 @@ export default function Game() {
   const [difficulty, setDifficulty] = useState(DEFAULT_DIFFICULTY)
   const [category, setCategory] = useState(DEFAULT_DIFFICULTY)
   const [selectedIndex, setSelectedIndex] = useState(null)
+  const [lastDigit, setLastDigit] = useState(null)
   const [notesMode, setNotesMode] = useState(false)
   const [ready, setReady] = useState(false)
   const [mode, setMode] = useState('play')
@@ -57,9 +58,15 @@ export default function Game() {
     () => (making ? NO_MISTAKES : findMistakes(board, solution)),
     [making, board, solution]
   )
+  // Same-number highlighting persists the last digit under the cursor: when an
+  // empty or notes-only cell is selected, the previously highlighted number
+  // stays lit until another numbered cell is selected. `highlightDigit` falls
+  // back to the remembered `lastDigit`; nothing highlights with no selection.
+  const selectedValue = selectedIndex != null ? board[selectedIndex].value : null
+  const highlightDigit = selectedIndex == null ? null : selectedValue ?? lastDigit
   const sameNumber = useMemo(
-    () => sameNumberCells(board, selectedIndex),
-    [board, selectedIndex]
+    () => sameNumberCellsForDigit(board, highlightDigit, selectedIndex),
+    [board, highlightDigit, selectedIndex]
   )
   const remaining = useMemo(() => remainingByDigit(board), [board])
   const won = useMemo(
@@ -129,6 +136,14 @@ export default function Game() {
     setStats(loadStats())
     setReady(true)
   }, [loadOrGenerate])
+
+  // Remember the digit under the cursor so same-number highlighting persists
+  // when an empty / notes-only cell is selected. Clears when selection clears
+  // (e.g. a new puzzle), so a stale digit never bleeds across games.
+  useEffect(() => {
+    if (selectedIndex == null) setLastDigit(null)
+    else if (selectedValue != null) setLastDigit(selectedValue)
+  }, [selectedIndex, selectedValue])
 
   // Load the persisted hide-notes display preference (device-local) and reflect
   // it on the document so a single CSS rule can hide the pencil marks.
