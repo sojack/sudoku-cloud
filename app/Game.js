@@ -20,6 +20,7 @@ import { validatePuzzle } from './lib/makepuzzle'
 import { loadGame, saveGame } from './lib/storage'
 import { loadStats, saveStats } from './lib/statsStorage'
 import { recordSolve, todayLocal } from './lib/stats'
+import { NOTES_HIDDEN_KEY, resolveStoredHideNotes } from './lib/notesView'
 import styles from './page.module.css'
 
 const EMPTY_GIVENS = Array(81).fill(0)
@@ -43,6 +44,7 @@ export default function Game() {
   const [stats, setStats] = useState(null)
   const [solveRecorded, setSolveRecorded] = useState(false)
   const [toasts, setToasts] = useState([])
+  const [notesHidden, setNotesHidden] = useState(false)
 
   const auth = useAuth()
   const [syncStatus, setSyncStatus] = useState(null)
@@ -80,6 +82,21 @@ export default function Game() {
     dispatch(action)
   }, [])
 
+  // Toggle whether pencil marks are shown. Notes are never erased — only their
+  // display is hidden — and the choice persists locally (not synced).
+  const toggleHideNotes = useCallback(() => {
+    setNotesHidden((hidden) => {
+      const next = !hidden
+      document.documentElement.dataset.hideNotes = next ? 'true' : 'false'
+      try {
+        localStorage.setItem(NOTES_HIDDEN_KEY, String(next))
+      } catch {
+        // storage unavailable — ignore; the attribute still applies this session
+      }
+      return next
+    })
+  }, [])
+
   // Restore a saved game, or generate a fresh default puzzle. Used on mount
   // and when cancelling make mode.
   const loadOrGenerate = useCallback(() => {
@@ -112,6 +129,16 @@ export default function Game() {
     setStats(loadStats())
     setReady(true)
   }, [loadOrGenerate])
+
+  // Load the persisted hide-notes display preference (device-local) and reflect
+  // it on the document so a single CSS rule can hide the pencil marks.
+  useEffect(() => {
+    const stored = resolveStoredHideNotes(
+      typeof localStorage !== 'undefined' ? localStorage.getItem(NOTES_HIDDEN_KEY) : null
+    )
+    setNotesHidden(stored)
+    document.documentElement.dataset.hideNotes = stored ? 'true' : 'false'
+  }, [])
 
   // Persist the game after ready — but never while making a puzzle.
   useEffect(() => {
@@ -286,9 +313,11 @@ export default function Game() {
       <Keypad
         remaining={remaining}
         notesMode={notesMode}
+        notesHidden={notesHidden}
         onDigit={handleDigit}
         onErase={handleErase}
         onToggleNotes={() => setNotesMode((m) => !m)}
+        onToggleHideNotes={toggleHideNotes}
       />
       {!making && <DifficultySelect value={difficulty} onChange={setDifficulty} />}
       <Controls
