@@ -1,7 +1,7 @@
 'use client'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { getSupabase } from './lib/supabase'
-import { getSession, onAuthStateChange, signIn, signUp, signOut } from './lib/auth'
+import { getSession, onAuthStateChange, signIn, signUp, signOut, resetPassword } from './lib/auth'
 
 const AuthContext = createContext(null)
 
@@ -37,6 +37,7 @@ export function AuthProvider({ children }) {
     signIn,
     signUp,
     signOut,
+    resetPassword,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

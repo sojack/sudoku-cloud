@@ -5,12 +5,13 @@ const fakeAuth = {
   signUp: vi.fn(async () => ({ data: { user: { id: 'u1' } }, error: null })),
   signInWithPassword: vi.fn(async () => ({ data: { session: {} }, error: null })),
   signOut: vi.fn(async () => ({ error: null })),
+  resetPasswordForEmail: vi.fn(async () => ({ data: {}, error: null })),
   getSession: vi.fn(async () => ({ data: { session: null } })),
   onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
 }
 vi.mock('./supabase', () => ({ getSupabase: () => ({ auth: fakeAuth }) }))
 
-const { signUp, signIn, signOut, getSession, onAuthStateChange } = await import('./auth')
+const { signUp, signIn, signOut, resetPassword, getSession, onAuthStateChange } = await import('./auth')
 
 beforeEach(() => {
   Object.values(fakeAuth).forEach((fn) => fn.mockClear?.())
@@ -28,6 +29,10 @@ describe('auth wrapper', () => {
   it('signOut calls through', async () => {
     await signOut()
     expect(fakeAuth.signOut).toHaveBeenCalled()
+  })
+  it('resetPassword sends a reset email for the address', async () => {
+    await resetPassword('a@b.com')
+    expect(fakeAuth.resetPasswordForEmail).toHaveBeenCalledWith('a@b.com')
   })
   it('onAuthStateChange registers a callback', () => {
     const cb = () => {}

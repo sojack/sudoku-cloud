@@ -37,12 +37,24 @@ export default function AccountMenu({ syncStatus = null }) {
     }
   }
 
+  async function handleForgotPassword() {
+    if (!email) {
+      setMessage('Enter your email first, then tap reset.')
+      return
+    }
+    setBusy(true)
+    setMessage(null)
+    const { error } = await auth.resetPassword(email)
+    setBusy(false)
+    setMessage(error ? error.message : 'Password reset email sent.')
+  }
+
   if (auth.user) {
     return (
       <div className={styles.account}>
         <span className={`${styles.dot} ${styles[syncStatus] ?? ''}`} title={syncStatus ?? ''} />
         <span className={styles.email}>{auth.user.email}</span>
-        <button className={styles.link} onClick={() => auth.signOut()}>
+        <button className={styles.link} onClick={() => auth.signOut().catch(() => {})}>
           Sign out
         </button>
       </div>
@@ -83,6 +95,16 @@ export default function AccountMenu({ syncStatus = null }) {
           >
             {mode === 'signup' ? 'Have an account? Sign in' : 'New? Create an account'}
           </button>
+          {mode === 'signin' && (
+            <button
+              type="button"
+              className={styles.link}
+              onClick={handleForgotPassword}
+              disabled={busy}
+            >
+              Forgot password?
+            </button>
+          )}
           {message && <p className={styles.message}>{message}</p>}
         </form>
       )}

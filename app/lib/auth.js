@@ -15,6 +15,11 @@ export async function signOut() {
   return getSupabase().auth.signOut()
 }
 
+// Send a password-reset email. Returns the raw Supabase result.
+export async function resetPassword(email) {
+  return getSupabase().auth.resetPasswordForEmail(email)
+}
+
 export async function getSession() {
   return getSupabase().auth.getSession()
 }
