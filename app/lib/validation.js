@@ -32,3 +32,15 @@ export function remainingByDigit(board) {
 export function isSolved(board, solution) {
   return board.every((cell, i) => cell.value === solution[i])
 }
+
+// Indices of non-given cells whose value already matches the solution. These
+// are "locked" — correct entries the player should not be able to edit by
+// mistake. Givens are excluded; they are immutable by their own rule.
+export function lockedCells(board, solution) {
+  const locked = new Set()
+  for (let i = 0; i < 81; i++) {
+    const cell = board[i]
+    if (!cell.given && cell.value != null && cell.value === solution[i]) locked.add(i)
+  }
+  return locked
+}
