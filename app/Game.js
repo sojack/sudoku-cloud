@@ -100,7 +100,9 @@ export default function Game() {
       setDifficulty(p.difficulty)
       setCategory(p.difficulty)
       setSolveRecorded(false)
-      setSavedAt(Date.now())
+      // An untouched auto-generated starter sorts as oldest, so a real
+      // in-progress game on the cloud wins until the user actually plays.
+      setSavedAt(0)
     }
   }, [])
 
