@@ -130,6 +130,12 @@
   height: 100%;
 }
 
+/* Hide-notes display preference: when set on the document, pencil marks are not
+   drawn. Notes are still stored in the cells — only their display is hidden. */
+:global(html[data-hide-notes='true']) .notes {
+  display: none;
+}
+
 .noteCell {
   font-size: clamp(0.6rem, 2vw, 0.75rem);
   line-height: 1;
