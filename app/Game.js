@@ -46,6 +46,9 @@ export default function Game() {
 
   const auth = useAuth()
   const [syncStatus, setSyncStatus] = useState(null)
+  // Timestamp of the last user edit (not the last persist). Drives newest-board
+  // -wins sync; a restore-from-storage preserves it rather than bumping it.
+  const [savedAt, setSavedAt] = useState(0)
 
   const making = mode === 'make'
   const mistakes = useMemo(
@@ -70,6 +73,13 @@ export default function Game() {
     setToasts((list) => [...list, { id: ++toastSeq, text }])
   }, [])
 
+  // Dispatch a board action and advance the edit timestamp, except for
+  // 'restore' (re-loading existing state must not count as a new edit).
+  const dispatchAndStamp = useCallback((action) => {
+    if (action.type !== 'restore') setSavedAt(Date.now())
+    dispatch(action)
+  }, [])
+
   // Restore a saved game, or generate a fresh default puzzle. Used on mount
   // and when cancelling make mode.
   const loadOrGenerate = useCallback(() => {
@@ -81,6 +91,7 @@ export default function Game() {
       setCategory(saved.category ?? saved.difficulty ?? DEFAULT_DIFFICULTY)
       setSolveRecorded(saved.recorded ?? false)
       setGivens(saved.board.map((c) => (c.given ? c.value : 0)))
+      setSavedAt(saved.savedAt ?? 0)
     } else {
       const p = generate(DEFAULT_DIFFICULTY)
       dispatch({ type: 'newGame', givens: p.givens })
@@ -89,6 +100,7 @@ export default function Game() {
       setDifficulty(p.difficulty)
       setCategory(p.difficulty)
       setSolveRecorded(false)
+      setSavedAt(Date.now())
     }
   }, [])
 
@@ -102,8 +114,8 @@ export default function Game() {
   // Persist the game after ready — but never while making a puzzle.
   useEffect(() => {
     if (!ready || making) return
-    saveGame({ board, solution, difficulty, category, recorded: solveRecorded })
-  }, [ready, making, board, solution, difficulty, category, solveRecorded])
+    saveGame({ board, solution, difficulty, category, recorded: solveRecorded, savedAt })
+  }, [ready, making, board, solution, difficulty, category, solveRecorded, savedAt])
 
   // Record a solve exactly once per puzzle instance, then toast any new badges.
   useEffect(() => {
@@ -142,6 +154,7 @@ export default function Game() {
           setCategory(merged.savegame.category ?? merged.savegame.difficulty ?? DEFAULT_DIFFICULTY)
           setSolveRecorded(merged.savegame.recorded ?? false)
           setGivens(merged.savegame.board.map((c) => (c.given ? c.value : 0)))
+          setSavedAt(merged.savegame.savedAt ?? Date.now())
         }
         setSyncStatus('synced')
       })
@@ -174,17 +187,17 @@ export default function Game() {
 
   function handleDigit(d) {
     if (selectedIndex == null) return
-    dispatch({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: d })
+    dispatchAndStamp({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: d })
   }
 
   function handleErase() {
     if (selectedIndex == null) return
-    dispatch({ type: 'clearCell', index: selectedIndex })
+    dispatchAndStamp({ type: 'clearCell', index: selectedIndex })
   }
 
   function handleNewGame() {
     const p = generate(difficulty)
-    dispatch({ type: 'newGame', givens: p.givens })
+    dispatchAndStamp({ type: 'newGame', givens: p.givens })
     setGivens(p.givens)
     setSolution(p.solution)
     setCategory(p.difficulty)
@@ -193,14 +206,14 @@ export default function Game() {
   }
 
   function handleReset() {
-    dispatch({ type: 'newGame', givens })
+    dispatchAndStamp({ type: 'newGame', givens })
     setSelectedIndex(null)
     // solveRecorded intentionally preserved — replaying the same puzzle must
     // not re-count toward stats.
   }
 
   function handleMakeSudoku() {
-    dispatch({ type: 'newGame', givens: EMPTY_GIVENS })
+    dispatchAndStamp({ type: 'newGame', givens: EMPTY_GIVENS })
     setMode('make')
     setMakeMessage(null)
     setNotesMode(false)
@@ -218,7 +231,7 @@ export default function Game() {
       setMakeMessage('Multiple solutions — add more clues.')
       return
     }
-    dispatch({ type: 'newGame', givens: entered })
+    dispatchAndStamp({ type: 'newGame', givens: entered })
     setGivens(entered)
     setSolution(result.solution)
     setCategory('custom')
@@ -240,14 +253,14 @@ export default function Game() {
     function onKeyDown(e) {
       if (selectedIndex == null) return
       if (e.key >= '1' && e.key <= '9') {
-        dispatch({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: Number(e.key) })
+        dispatchAndStamp({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: Number(e.key) })
       } else if (e.key === 'Backspace' || e.key === 'Delete') {
-        dispatch({ type: 'clearCell', index: selectedIndex })
+        dispatchAndStamp({ type: 'clearCell', index: selectedIndex })
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedIndex, notesMode])
+  }, [selectedIndex, notesMode, dispatchAndStamp])
 
   return (
     <div className={styles.game}>

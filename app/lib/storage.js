@@ -1,7 +1,7 @@
 const KEY = 'sudoku-cloud:savegame';
 export const STORAGE_VERSION = 3;
 
-export function saveGame({ board, solution, difficulty, category, recorded }) {
+export function saveGame({ board, solution, difficulty, category, recorded, savedAt }) {
   if (typeof localStorage === 'undefined') return;
   const payload = JSON.stringify({
     version: STORAGE_VERSION,
@@ -10,7 +10,9 @@ export function saveGame({ board, solution, difficulty, category, recorded }) {
     difficulty,
     category,
     recorded,
-    savedAt: Date.now(),
+    // savedAt reflects the last *edit*, supplied by the caller, so it survives a
+    // restore-from-storage. Falls back to now only when not provided.
+    savedAt: savedAt ?? Date.now(),
   });
   localStorage.setItem(KEY, payload);
 }

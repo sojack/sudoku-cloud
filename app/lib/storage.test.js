@@ -65,4 +65,10 @@ describe('savegame persistence', () => {
     )
     expect(loadGame().savedAt).toBe(0)
   })
+  it('preserves an explicitly provided savedAt instead of restamping', () => {
+    // Guards the sync footgun: re-saving a restored board must not bump its
+    // timestamp, or a stale board could win newest-wins over a newer remote.
+    saveGame({ board: [], solution: [], difficulty: 'easy', category: 'easy', recorded: false, savedAt: 12345 })
+    expect(loadGame().savedAt).toBe(12345)
+  })
 })
