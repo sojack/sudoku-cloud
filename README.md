@@ -17,6 +17,46 @@ npm run dev      # http://localhost:3000
 npm run build    # production build
 ```
 
+## Persistence
+
+All state is client-side `localStorage` — device- and browser-scoped, not
+account-scoped (no cross-device sync). Three independent keys:
+
+| Key | Holds |
+|-----|-------|
+| `sudoku-cloud:savegame` | Current board, solution, difficulty/category, `recorded` flag. Versioned via `STORAGE_VERSION`; a version mismatch silently discards the old save. |
+| `sudoku-cloud:stats` | Streak, per-difficulty solved counts, earned badges. |
+| `sudoku-cloud:theme` | Light/dark choice (read inline in `layout.js` before paint to avoid a flash). |
+
+Durability:
+
+- **Survives:** refresh, tab close, browser restart, OS reboot.
+- **Does not survive / share across:** a different browser or device,
+  incognito sessions, clearing site data, or a different origin.
+- **Eviction risk:** Safari's ITP can purge script-writable storage after
+  ~7 days of no interaction, so a returning user may lose their streak/stats.
+
+**Gotcha:** the stats key is *not* schema-versioned the way `savegame` is.
+Add versioning to `statsStorage.js` before changing the stats object shape,
+or old stored objects will be read as-is instead of invalidated.
+
+True cross-device durability and eviction resistance is the future
+login/user-system path the code is already shaped for (the `recorded` flag and
+per-category counts migrate cleanly to a backend).
+
+## Cloud sync (accounts)
+
+Optional. With no account the app is local-only, exactly as described above.
+Signing in (email + password) turns on cross-device sync via Supabase:
+
+- State lives in a single `game_state` row per user (RLS-protected) holding the
+  `savegame` and `stats` blobs. Theme stays device-local.
+- **Conflict rule:** the most recently saved board wins; stats merge
+  non-destructively (max solved counts, union badges, later-dated streak/daily),
+  so a solve is never lost.
+- Setup: copy `.env.example` → `.env.local`, fill in the Supabase URL + anon
+  key, and apply `supabase/migrations/0001_game_state.sql` to your project.
+
 ## Roadmap
 
 The path from the current proof-of-concept to a finished, daily-use app.
@@ -56,6 +96,27 @@ The path from the current proof-of-concept to a finished, daily-use app.
 - [x] Daily streak (consecutive days with a solve)
 - [x] Milestone badges (total solved + solves-in-a-day), celebrated with a toast
 - [x] localStorage-backed, structured for a future per-user login
+
+### Phase 6 — Accounts & cross-device sync ✅
+
+- [x] Email + password auth (Supabase), guest play still default
+- [x] Per-user cloud state with row-level security
+- [x] Non-destructive stats merge + newest-board-wins conflict resolution
+- [x] Offline-first: local cache unchanged, syncs on reconnect
+
+### Future — Native iOS app (maybe)
+
+Possible future feature, not committed. The app is pure client-side, so the
+likely path is a [Capacitor](https://capacitorjs.com/) wrapper rather than a
+React Native rewrite:
+
+- [ ] Static export (`output: 'export'`) — no SSR/API routes today, so this
+      should be clean
+- [ ] Wrap with Capacitor (`@capacitor/ios`), `webDir` → `out/`; `localStorage`
+      works as-is inside WKWebView
+- [ ] Native polish: app icon, splash, safe-area insets, haptics on input —
+      partly to avoid App Store "thin wrapper" rejection (Guideline 4.2)
+- [ ] Apple Developer Program, signing, TestFlight, App Store submission
 
 ## History
 

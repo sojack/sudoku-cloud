@@ -7,6 +7,10 @@ import DifficultySelect from './DifficultySelect'
 import ThemeToggle from './ThemeToggle'
 import StatsPanel from './StatsPanel'
 import Toast from './Toast'
+import AccountMenu from './AccountMenu'
+import { useAuth } from './AuthProvider'
+import { getSupabase } from './lib/supabase'
+import { syncState, pushRemote } from './lib/sync'
 import { createBoard } from './lib/board'
 import { boardReducer } from './lib/reducer'
 import { mistakes as findMistakes, remainingByDigit, isSolved } from './lib/validation'
@@ -40,6 +44,12 @@ export default function Game() {
   const [solveRecorded, setSolveRecorded] = useState(false)
   const [toasts, setToasts] = useState([])
 
+  const auth = useAuth()
+  const [syncStatus, setSyncStatus] = useState(null)
+  // Timestamp of the last user edit (not the last persist). Drives newest-board
+  // -wins sync; a restore-from-storage preserves it rather than bumping it.
+  const [savedAt, setSavedAt] = useState(0)
+
   const making = mode === 'make'
   const mistakes = useMemo(
     () => (making ? NO_MISTAKES : findMistakes(board, solution)),
@@ -63,6 +73,13 @@ export default function Game() {
     setToasts((list) => [...list, { id: ++toastSeq, text }])
   }, [])
 
+  // Dispatch a board action and advance the edit timestamp, except for
+  // 'restore' (re-loading existing state must not count as a new edit).
+  const dispatchAndStamp = useCallback((action) => {
+    if (action.type !== 'restore') setSavedAt(Date.now())
+    dispatch(action)
+  }, [])
+
   // Restore a saved game, or generate a fresh default puzzle. Used on mount
   // and when cancelling make mode.
   const loadOrGenerate = useCallback(() => {
@@ -74,6 +91,7 @@ export default function Game() {
       setCategory(saved.category ?? saved.difficulty ?? DEFAULT_DIFFICULTY)
       setSolveRecorded(saved.recorded ?? false)
       setGivens(saved.board.map((c) => (c.given ? c.value : 0)))
+      setSavedAt(saved.savedAt ?? 0)
     } else {
       const p = generate(DEFAULT_DIFFICULTY)
       dispatch({ type: 'newGame', givens: p.givens })
@@ -82,6 +100,9 @@ export default function Game() {
       setDifficulty(p.difficulty)
       setCategory(p.difficulty)
       setSolveRecorded(false)
+      // An untouched auto-generated starter sorts as oldest, so a real
+      // in-progress game on the cloud wins until the user actually plays.
+      setSavedAt(0)
     }
   }, [])
 
@@ -95,8 +116,8 @@ export default function Game() {
   // Persist the game after ready — but never while making a puzzle.
   useEffect(() => {
     if (!ready || making) return
-    saveGame({ board, solution, difficulty, category, recorded: solveRecorded })
-  }, [ready, making, board, solution, difficulty, category, solveRecorded])
+    saveGame({ board, solution, difficulty, category, recorded: solveRecorded, savedAt })
+  }, [ready, making, board, solution, difficulty, category, solveRecorded, savedAt])
 
   // Record a solve exactly once per puzzle instance, then toast any new badges.
   useEffect(() => {
@@ -111,19 +132,74 @@ export default function Game() {
     for (const badge of newBadges) pushToast(`🏅 ${badge.label}!`)
   }, [ready, making, won, solveRecorded, stats, category, pushToast])
 
+  // On sign-in (or load with an existing session): reconcile local with the
+  // cloud, then adopt the merged result locally and in the UI.
+  const userId = auth?.user?.id ?? null
+  useEffect(() => {
+    if (!ready || !userId) return
+    const client = getSupabase()
+    if (!client) return
+    let cancelled = false
+    setSyncStatus('syncing')
+    syncState(client, userId, { savegame: loadGame(), stats: loadStats() })
+      .then((merged) => {
+        if (cancelled) return
+        if (merged.stats) {
+          saveStats(merged.stats)
+          setStats(merged.stats)
+        }
+        if (merged.savegame && merged.savegame.board && merged.savegame.solution) {
+          saveGame(merged.savegame)
+          dispatch({ type: 'restore', board: merged.savegame.board })
+          setSolution(merged.savegame.solution)
+          if (merged.savegame.difficulty) setDifficulty(merged.savegame.difficulty)
+          setCategory(merged.savegame.category ?? merged.savegame.difficulty ?? DEFAULT_DIFFICULTY)
+          setSolveRecorded(merged.savegame.recorded ?? false)
+          setGivens(merged.savegame.board.map((c) => (c.given ? c.value : 0)))
+          setSavedAt(merged.savegame.savedAt ?? Date.now())
+        }
+        setSyncStatus('synced')
+      })
+      .catch(() => {
+        if (!cancelled) setSyncStatus('offline')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [ready, userId])
+
+  // Debounced push of local changes to the cloud while signed in. Skips while
+  // making a puzzle (consistent with the local-save effect).
+  useEffect(() => {
+    if (!ready || making || !userId || syncStatus == null) return
+    const client = getSupabase()
+    if (!client) return
+    const id = setTimeout(() => {
+      pushRemote(client, userId, { savegame: loadGame(), stats: loadStats() })
+        .then(() => setSyncStatus('synced'))
+        .catch(() => setSyncStatus('offline'))
+    }, 1500)
+    return () => clearTimeout(id)
+  }, [ready, making, userId, board, solution, difficulty, category, solveRecorded, stats])
+
+  // When the user signs out, stop syncing. Local cache and play are untouched.
+  useEffect(() => {
+    if (!userId) setSyncStatus(null)
+  }, [userId])
+
   function handleDigit(d) {
     if (selectedIndex == null) return
-    dispatch({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: d })
+    dispatchAndStamp({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: d })
   }
 
   function handleErase() {
     if (selectedIndex == null) return
-    dispatch({ type: 'clearCell', index: selectedIndex })
+    dispatchAndStamp({ type: 'clearCell', index: selectedIndex })
   }
 
   function handleNewGame() {
     const p = generate(difficulty)
-    dispatch({ type: 'newGame', givens: p.givens })
+    dispatchAndStamp({ type: 'newGame', givens: p.givens })
     setGivens(p.givens)
     setSolution(p.solution)
     setCategory(p.difficulty)
@@ -132,14 +208,14 @@ export default function Game() {
   }
 
   function handleReset() {
-    dispatch({ type: 'newGame', givens })
+    dispatchAndStamp({ type: 'newGame', givens })
     setSelectedIndex(null)
     // solveRecorded intentionally preserved — replaying the same puzzle must
     // not re-count toward stats.
   }
 
   function handleMakeSudoku() {
-    dispatch({ type: 'newGame', givens: EMPTY_GIVENS })
+    dispatchAndStamp({ type: 'newGame', givens: EMPTY_GIVENS })
     setMode('make')
     setMakeMessage(null)
     setNotesMode(false)
@@ -157,7 +233,7 @@ export default function Game() {
       setMakeMessage('Multiple solutions — add more clues.')
       return
     }
-    dispatch({ type: 'newGame', givens: entered })
+    dispatchAndStamp({ type: 'newGame', givens: entered })
     setGivens(entered)
     setSolution(result.solution)
     setCategory('custom')
@@ -179,18 +255,19 @@ export default function Game() {
     function onKeyDown(e) {
       if (selectedIndex == null) return
       if (e.key >= '1' && e.key <= '9') {
-        dispatch({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: Number(e.key) })
+        dispatchAndStamp({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: Number(e.key) })
       } else if (e.key === 'Backspace' || e.key === 'Delete') {
-        dispatch({ type: 'clearCell', index: selectedIndex })
+        dispatchAndStamp({ type: 'clearCell', index: selectedIndex })
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedIndex, notesMode])
+  }, [selectedIndex, notesMode, dispatchAndStamp])
 
   return (
     <div className={styles.game}>
       <ThemeToggle />
+      <AccountMenu syncStatus={syncStatus} />
       <Toast toasts={toasts} onDismiss={dismissToast} />
       {won && <p className={styles.win}>Solved! 🎉</p>}
       {making && (
