@@ -71,4 +71,22 @@ describe('savegame persistence', () => {
     saveGame({ board: [], solution: [], difficulty: 'easy', category: 'easy', recorded: false, savedAt: 12345 })
     expect(loadGame().savedAt).toBe(12345)
   })
+  it('round-trips mistakeCount', () => {
+    saveGame({
+      board: [],
+      solution: [],
+      difficulty: 'easy',
+      category: 'easy',
+      recorded: false,
+      mistakeCount: 2,
+    })
+    expect(loadGame().mistakeCount).toBe(2)
+  })
+  it('defaults mistakeCount to 0 for a legacy save written without it', () => {
+    localStorage.setItem(
+      'sudoku-cloud:savegame',
+      JSON.stringify({ version: STORAGE_VERSION, board: [], solution: [], difficulty: 'easy' })
+    )
+    expect(loadGame().mistakeCount).toBe(0)
+  })
 })
