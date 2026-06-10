@@ -104,6 +104,12 @@ The path from the current proof-of-concept to a finished, daily-use app.
 - [x] Non-destructive stats merge + newest-board-wins conflict resolution
 - [x] Offline-first: local cache unchanged, syncs on reconnect
 
+### Phase 7 — Fair play ✅
+
+- [x] Three-mistake budget per puzzle: a new wrong entry costs a strike
+- [x] Third strike freezes the board with a game-over modal (New puzzle / Reset)
+- [x] Strike count persists across reloads and sync, closing the spam-the-cell exploit
+
 ### Future — Native iOS app (maybe)
 
 Possible future feature, not committed. The app is pure client-side, so the
