@@ -152,6 +152,17 @@
   color: var(--win);
 }
 
+.mistakeCounter {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+
+.mistakeCounterMax {
+  color: var(--mistake-fg);
+}
+
 .wrong {
   color: var(--mistake-fg);
 }
