@@ -90,8 +90,8 @@ export default function Game() {
   // Three strikes freezes the board. Never in make mode (no solution to judge).
   const gameOver = !making && mistakeCount >= MAX_MISTAKES
   // Undo is available whenever there is recorded history and the board is not
-  // frozen at game over.
-  const canUndo = history.length > 0 && !gameOver
+  // frozen at game over or blocked by an open dialog.
+  const canUndo = history.length > 0 && !gameOver && !confirm
 
   const dismissToast = useCallback((id) => {
     setToasts((list) => list.filter((t) => t.id !== id))
@@ -305,7 +305,9 @@ export default function Game() {
     }
   }
 
-  function handleUndo() {
+  // Memoized so the Cmd/Ctrl+Z effect can list it as a dependency and always
+  // call a fresh closure — no stale `history`/`canUndo` capture.
+  const handleUndo = useCallback(() => {
     if (!canUndo) return
     const { snapshot, stack } = popHistory(history)
     if (snapshot == null) return
@@ -315,7 +317,7 @@ export default function Game() {
     // restore directly and stamp here.
     setSavedAt(Date.now())
     dispatch({ type: 'restore', board: snapshot })
-  }
+  }, [canUndo, history])
 
   function handleNewGame() {
     const p = generate(difficulty)
@@ -416,7 +418,7 @@ export default function Game() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [confirm, gameOver, history])
+  }, [confirm, gameOver, handleUndo])
 
   return (
     <div className={styles.game}>
