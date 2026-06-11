@@ -11,6 +11,7 @@ import AccountMenu from './AccountMenu'
 import ConfirmDialog from './ConfirmDialog'
 import MistakeCounter from './MistakeCounter'
 import GameOverDialog from './GameOverDialog'
+import WinOverlay from './WinOverlay'
 import { useAuth } from './AuthProvider'
 import { getSupabase } from './lib/supabase'
 import { syncState, pushRemote } from './lib/sync'
@@ -54,6 +55,10 @@ export default function Game() {
   const [confirm, setConfirm] = useState(null) // { message, onConfirm } | null
   const [mistakeCount, setMistakeCount] = useState(0)
   const [gameOverDismissed, setGameOverDismissed] = useState(false)
+  // Whether the win celebration has been dismissed. Initialised from the
+  // savegame's `recorded` flag on restore, so reloading an already-solved
+  // board doesn't replay the overlay.
+  const [winDismissed, setWinDismissed] = useState(false)
   const [history, setHistory] = useState([])
 
   const auth = useAuth()
@@ -145,6 +150,7 @@ export default function Game() {
       setGivens(saved.board.map((c) => (c.given ? c.value : 0)))
       setSavedAt(saved.savedAt ?? 0)
       setMistakeCount(saved.mistakeCount ?? 0)
+      setWinDismissed(saved.recorded ?? false)
     } else {
       const p = generate(DEFAULT_DIFFICULTY)
       dispatch({ type: 'newGame', givens: p.givens })
@@ -157,6 +163,7 @@ export default function Game() {
       // in-progress game on the cloud wins until the user actually plays.
       setSavedAt(0)
       setMistakeCount(0)
+      setWinDismissed(false)
     }
   }, [])
 
@@ -229,6 +236,7 @@ export default function Game() {
           setSavedAt(merged.savegame.savedAt ?? Date.now())
           setMistakeCount(merged.savegame.mistakeCount ?? 0)
           setGameOverDismissed(false)
+          setWinDismissed(merged.savegame.recorded ?? false)
           setHistory([])
         }
         setSyncStatus('synced')
@@ -329,6 +337,7 @@ export default function Game() {
     setSelectedIndex(null)
     setMistakeCount(0)
     setGameOverDismissed(false)
+    setWinDismissed(false)
     setHistory([])
   }
 
@@ -337,6 +346,7 @@ export default function Game() {
     setSelectedIndex(null)
     setMistakeCount(0)
     setGameOverDismissed(false)
+    setWinDismissed(false)
     setHistory([])
     // solveRecorded intentionally preserved — replaying the same puzzle must
     // not re-count toward stats.
@@ -350,6 +360,7 @@ export default function Game() {
     setSelectedIndex(null)
     setMistakeCount(0)
     setGameOverDismissed(false)
+    setWinDismissed(false)
     setHistory([])
   }
 
@@ -374,6 +385,7 @@ export default function Game() {
     setSelectedIndex(null)
     setMistakeCount(0)
     setGameOverDismissed(false)
+    setWinDismissed(false)
     setHistory([])
   }
 
@@ -422,50 +434,67 @@ export default function Game() {
 
   return (
     <div className={styles.game}>
-      <ThemeToggle />
-      <AccountMenu syncStatus={syncStatus} />
+      <header className={styles.topBar}>
+        <h1 className={styles.wordmark}>
+          Sudoku<span className={styles.wordmarkDot}>.</span>
+        </h1>
+        <div className={styles.topActions}>
+          <AccountMenu syncStatus={syncStatus} />
+          <ThemeToggle />
+        </div>
+      </header>
       <Toast toasts={toasts} onDismiss={dismissToast} />
-      {won && <p className={styles.win}>Solved! 🎉</p>}
-      {!making && <MistakeCounter count={mistakeCount} max={MAX_MISTAKES} />}
-      {making && (
-        <p className={styles.makeHint}>
-          Enter your puzzle, then press Start.
-        </p>
-      )}
-      {makeMessage && <p className={styles.wrong}>{makeMessage}</p>}
-      <Board
-        board={board}
-        mistakes={mistakes}
-        sameNumber={sameNumber}
-        selectedIndex={selectedIndex}
-        onSelect={handleSelect}
-      />
-      <Keypad
-        remaining={remaining}
-        notesMode={notesMode}
-        notesHidden={notesHidden}
-        onDigit={handleDigit}
-        onErase={handleErase}
-        onUndo={handleUndo}
-        canUndo={canUndo}
-        onToggleNotes={() => setNotesMode((m) => !m)}
-        onToggleHideNotes={toggleHideNotes}
-      />
-      {!making && <DifficultySelect value={difficulty} onChange={setDifficulty} />}
-      <Controls
-        mode={mode}
-        onNewGame={() =>
-          confirmDestructive(handleNewGame, 'Start a new puzzle? Your current progress will be lost.')
-        }
-        onReset={() =>
-          confirmDestructive(handleReset, 'Reset the board? All your entries will be cleared.')
-        }
-        onMakeSudoku={() =>
-          confirmDestructive(handleMakeSudoku, 'Make a new puzzle? Your current progress will be lost.')
-        }
-        onStart={handleStart}
-        onCancel={handleCancel}
-      />
+      <div className={styles.layout}>
+        <section className={styles.boardPane}>
+          <div className={styles.statusRow}>
+            {won && winDismissed && <p className={styles.win}>Solved ✦</p>}
+            {!making && !won && <MistakeCounter count={mistakeCount} max={MAX_MISTAKES} />}
+            {making && (
+              <p className={styles.makeHint}>
+                Enter your puzzle, then press Start.
+              </p>
+            )}
+            {makeMessage && <p className={styles.wrong}>{makeMessage}</p>}
+          </div>
+          <Board
+            board={board}
+            mistakes={mistakes}
+            sameNumber={sameNumber}
+            selectedIndex={selectedIndex}
+            won={won}
+            onSelect={handleSelect}
+          />
+        </section>
+        <aside className={styles.sidePane}>
+          <Keypad
+            remaining={remaining}
+            notesMode={notesMode}
+            notesHidden={notesHidden}
+            onDigit={handleDigit}
+            onErase={handleErase}
+            onUndo={handleUndo}
+            canUndo={canUndo}
+            onToggleNotes={() => setNotesMode((m) => !m)}
+            onToggleHideNotes={toggleHideNotes}
+          />
+          {!making && <DifficultySelect value={difficulty} onChange={setDifficulty} />}
+          <Controls
+            mode={mode}
+            onNewGame={() =>
+              confirmDestructive(handleNewGame, 'Start a new puzzle? Your current progress will be lost.')
+            }
+            onReset={() =>
+              confirmDestructive(handleReset, 'Reset the board? All your entries will be cleared.')
+            }
+            onMakeSudoku={() =>
+              confirmDestructive(handleMakeSudoku, 'Make a new puzzle? Your current progress will be lost.')
+            }
+            onStart={handleStart}
+            onCancel={handleCancel}
+          />
+          {!making && stats && <StatsPanel stats={stats} />}
+        </aside>
+      </div>
       {confirm && (
         <ConfirmDialog
           message={confirm.message}
@@ -480,7 +509,15 @@ export default function Game() {
           onDismiss={() => setGameOverDismissed(true)}
         />
       )}
-      {!making && stats && <StatsPanel stats={stats} />}
+      {won && !winDismissed && (
+        <WinOverlay
+          category={category}
+          mistakeCount={mistakeCount}
+          streak={stats?.streak}
+          onNewGame={handleNewGame}
+          onDismiss={() => setWinDismissed(true)}
+        />
+      )}
     </div>
   )
 }

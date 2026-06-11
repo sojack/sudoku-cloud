@@ -29,10 +29,10 @@ export default function Keypad({ remaining, notesMode, notesHidden, onDigit, onE
           disabled={!canUndo}
           onClick={onUndo}
         >
-          Undo
+          ↺ Undo
         </button>
         <button type="button" className={styles.key} onClick={onErase}>
-          Erase
+          ⌫ Erase
         </button>
         <button
           type="button"
