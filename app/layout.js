@@ -1,5 +1,12 @@
 import "./globals.css";
+import { Fraunces, Outfit } from 'next/font/google';
 import { AuthProvider } from './AuthProvider';
+
+// Outfit carries all UI text and the board digits (clean geometric sans,
+// tabular-friendly); Fraunces is reserved for display moments — the wordmark
+// and the win overlay title.
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-ui', display: 'swap' });
+const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-display', display: 'swap' });
 
 export const metadata = {
   title: "Sudoku Cloud",
@@ -17,7 +24,7 @@ export default function RootLayout({ children }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body>
+      <body className={`${outfit.variable} ${fraunces.variable}`}>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

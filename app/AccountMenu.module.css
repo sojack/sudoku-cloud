@@ -3,57 +3,90 @@
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-end;
   font-size: 0.85rem;
+  color: var(--muted);
 }
 
 .email {
-  opacity: 0.8;
+  font-weight: 600;
 }
 
 .link {
   background: none;
   border: none;
-  color: inherit;
+  color: var(--accent-strong);
   text-decoration: underline;
+  text-underline-offset: 3px;
   cursor: pointer;
   font-size: inherit;
+  font-weight: 600;
   padding: 0;
+}
+
+.link:hover {
+  color: var(--text);
 }
 
 .form {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.4rem;
 }
 
 .form input {
-  padding: 0.3rem 0.5rem;
+  padding: 0.4rem 0.7rem;
   font-size: 0.85rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--cell-border);
+  border-radius: 10px;
+}
+
+.form input::placeholder {
+  color: var(--muted);
+}
+
+.form button:not(.link) {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 650;
+  cursor: pointer;
+  color: #fffdf5;
+  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  border: 1px solid var(--accent-strong);
+  border-radius: 999px;
+}
+
+.form button:not(.link):disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .message {
   width: 100%;
   margin: 0.2rem 0 0;
-  opacity: 0.8;
+  text-align: right;
 }
 
 .dot {
-  width: 0.6rem;
-  height: 0.6rem;
+  width: 0.55rem;
+  height: 0.55rem;
   border-radius: 50%;
-  background: #bbb;
+  background: var(--muted);
+  box-shadow: 0 0 0 2px var(--surface);
 }
 
 .dot.synced {
-  background: #4caf50;
+  background: var(--win);
 }
 
 .dot.syncing {
-  background: #ffc107;
+  background: var(--accent);
 }
 
 .dot.offline {
-  background: #e57373;
+  background: var(--mistake-fg);
 }

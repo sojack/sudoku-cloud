@@ -1,60 +1,105 @@
 :root {
-  /* Light — "Soft Warm" */
-  --bg: #faf7f0;
-  --surface: #efe9da;
-  --text: #3a3326;
-  --muted: #7c6f57;
-  --ink-given: #3a3326;
-  --ink-entry: #5b54c9;
-  --cell-border: #e3dcc9;
-  --box-border: #7c6f57;
-  --sel-bg: #ff8fc4; /* selected cell — hotpink tint */
-  --peer-bg: #ffc2dd; /* matching numbers — deeppink tint */
+  /* Light — "Ivory & Gilt": warm paper neutrals with a champagne-gold accent.
+     Highlight inks are chosen for AA contrast on every highlight tint. */
+  --bg: #f4efe5;
+  --bg-glow-1: rgba(191, 152, 74, 0.18);
+  --bg-glow-2: rgba(63, 94, 178, 0.1);
+  --surface: #fdfaf3;
+  --surface-2: #f1eadb;
+  --surface-glass: rgba(253, 250, 243, 0.78);
+  --text: #2b2620;
+  --muted: #756950;
+  --ink-given: #2b2620;
+  --ink-entry: #2f56a8;
+  --cell-border: #e7dfca;
+  --box-border: #97834f;
+  --accent: #b08a3c;
+  --accent-strong: #8a6a24;
+  --accent-ink: #5f4715;
+  --accent-soft: rgba(176, 138, 60, 0.14);
+  --sel-tint-1: rgba(235, 199, 122, 0.66); /* selected cell glass, top-left */
+  --sel-tint-2: rgba(208, 162, 73, 0.42); /* selected cell glass, bottom-right */
+  --same-bg: rgba(176, 138, 60, 0.3); /* matching numbers */
+  --peer-bg: rgba(176, 138, 60, 0.1); /* row/col/box crosshair */
   --note-ink: #5c5340; /* pencil marks on the normal cell background */
-  --highlight-ink: #1a1320; /* glyphs sitting on a highlight (sel/peer) bg */
-  --mistake-fg: #c0392b;
-  --mistake-bg: #f7e3df;
-  --accent-bg: #e8e6fb;
-  --win: #3a7d44;
+  --highlight-ink: #241c0d; /* glyphs sitting on a highlight (sel/same/peer) bg */
+  --mistake-fg: #b3362c;
+  --mistake-bg: rgba(179, 54, 44, 0.1);
+  --accent-bg: #efe3c6;
+  --win: #2e7d4f;
+  --key-sheen: rgba(255, 255, 255, 0.6);
+  --shadow-1: 0 1px 2px rgba(43, 38, 32, 0.06), 0 4px 14px rgba(43, 38, 32, 0.08);
+  --shadow-2: 0 12px 34px rgba(43, 38, 32, 0.2);
+  --ring: rgba(176, 138, 60, 0.55);
 }
 
-/* Dark — "Cool Slate". Applied when the user has explicitly chosen dark... */
+/* Dark — "Midnight Velvet". Applied when the user has explicitly chosen dark... */
 :root[data-theme='dark'] {
-  --bg: #1a1d24;
-  --surface: #272b34;
-  --text: #e6e9f0;
-  --muted: #7e879b;
-  --ink-given: #f2f4f9;
-  --ink-entry: #8d9bff;
-  --cell-border: #3a3f4b;
-  --box-border: #7e879b;
-  --sel-bg: hotpink;
-  --peer-bg: deeppink;
-  --note-ink: #aeb6c9;
-  --mistake-fg: #ff8f8f;
-  --mistake-bg: #3f2330;
-  --accent-bg: #2d3358;
-  --win: #7fd68b;
+  --bg: #11141b;
+  --bg-glow-1: rgba(214, 179, 106, 0.12);
+  --bg-glow-2: rgba(106, 126, 235, 0.1);
+  --surface: #1c222e;
+  --surface-2: #242b39;
+  --surface-glass: rgba(28, 34, 46, 0.78);
+  --text: #e9ebf1;
+  --muted: #98a0b3;
+  --ink-given: #f3f5fa;
+  --ink-entry: #a8bcff;
+  --cell-border: #2c3340;
+  --box-border: #5e6880;
+  --accent: #d6b36a;
+  --accent-strong: #e8cd89;
+  --accent-ink: #f2e3bd;
+  --accent-soft: rgba(214, 179, 106, 0.16);
+  --sel-tint-1: rgba(230, 200, 127, 0.46);
+  --sel-tint-2: rgba(201, 164, 92, 0.26);
+  --same-bg: rgba(214, 179, 106, 0.3);
+  --peer-bg: rgba(214, 179, 106, 0.1);
+  --note-ink: #b6bdcf;
+  --highlight-ink: #fdf6e4;
+  --mistake-fg: #ff9089;
+  --mistake-bg: rgba(255, 144, 137, 0.12);
+  --accent-bg: #39341f;
+  --win: #74c993;
+  --key-sheen: rgba(255, 255, 255, 0.06);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.35);
+  --shadow-2: 0 12px 34px rgba(0, 0, 0, 0.5);
+  --ring: rgba(214, 179, 106, 0.6);
 }
 
 /* ...or when the OS prefers dark AND no explicit theme is set. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --bg: #1a1d24;
-    --surface: #272b34;
-    --text: #e6e9f0;
-    --muted: #7e879b;
-    --ink-given: #f2f4f9;
-    --ink-entry: #8d9bff;
-    --cell-border: #3a3f4b;
-    --box-border: #7e879b;
-    --sel-bg: hotpink;
-    --peer-bg: deeppink;
-    --note-ink: #aeb6c9;
-    --mistake-fg: #ff8f8f;
-    --mistake-bg: #3f2330;
-    --accent-bg: #2d3358;
-    --win: #7fd68b;
+    --bg: #11141b;
+    --bg-glow-1: rgba(214, 179, 106, 0.12);
+    --bg-glow-2: rgba(106, 126, 235, 0.1);
+    --surface: #1c222e;
+    --surface-2: #242b39;
+    --surface-glass: rgba(28, 34, 46, 0.78);
+    --text: #e9ebf1;
+    --muted: #98a0b3;
+    --ink-given: #f3f5fa;
+    --ink-entry: #a8bcff;
+    --cell-border: #2c3340;
+    --box-border: #5e6880;
+    --accent: #d6b36a;
+    --accent-strong: #e8cd89;
+    --accent-ink: #f2e3bd;
+    --accent-soft: rgba(214, 179, 106, 0.16);
+    --sel-tint-1: rgba(230, 200, 127, 0.46);
+    --sel-tint-2: rgba(201, 164, 92, 0.26);
+    --same-bg: rgba(214, 179, 106, 0.3);
+    --peer-bg: rgba(214, 179, 106, 0.1);
+    --note-ink: #b6bdcf;
+    --highlight-ink: #fdf6e4;
+    --mistake-fg: #ff9089;
+    --mistake-bg: rgba(255, 144, 137, 0.12);
+    --accent-bg: #39341f;
+    --win: #74c993;
+    --key-sheen: rgba(255, 255, 255, 0.06);
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.35);
+    --shadow-2: 0 12px 34px rgba(0, 0, 0, 0.5);
+    --ring: rgba(214, 179, 106, 0.6);
   }
 }
 
@@ -65,9 +110,15 @@ body {
 }
 
 body {
+  min-height: 100dvh;
   color: var(--text);
-  background: var(--bg);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Two faint corner glows (gold above, ink-blue below) over the base tone
+     give the page depth without competing with the board. */
+  background:
+    radial-gradient(60rem 42rem at 85% -10%, var(--bg-glow-1), transparent 60%),
+    radial-gradient(52rem 38rem at -12% 108%, var(--bg-glow-2), transparent 60%),
+    var(--bg);
+  font-family: var(--font-ui), system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -80,4 +131,18 @@ body {
 
 a {
   color: inherit;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--accent-soft);
 }

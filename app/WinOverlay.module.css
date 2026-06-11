@@ -1,0 +1,273 @@
+/* Staged timeline (seconds from solve):
+   0.0–1.8  the board's golden wave plays underneath (page.module.css)
+   0.9      glass backdrop begins its slow fade-in
+   1.7      panel rises; kicker → title → subtitle stagger in
+   1.6–3.2  confetti pieces start falling (per-piece random delay)
+   2.3      actions fade in — the player can act once the moment lands */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow: hidden;
+  background:
+    radial-gradient(44rem 32rem at 50% 38%, rgba(214, 179, 106, 0.22), transparent 65%),
+    rgba(14, 12, 8, 0.55);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  backdrop-filter: blur(10px) saturate(1.2);
+  animation: backdropIn 1.2s ease 0.9s both;
+}
+
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Tier variants: easy keeps the glow soft, hard turns it up. */
+.backdrop[data-tier='easy'] {
+  background:
+    radial-gradient(44rem 32rem at 50% 38%, rgba(214, 179, 106, 0.14), transparent 65%),
+    rgba(14, 12, 8, 0.5);
+}
+
+.backdrop[data-tier='hard'] {
+  background:
+    radial-gradient(48rem 36rem at 50% 38%, rgba(214, 179, 106, 0.32), transparent 68%),
+    rgba(14, 12, 8, 0.6);
+}
+
+.panel {
+  position: relative;
+  width: min(26rem, 100%);
+  padding: 2.5rem 2rem 2rem;
+  text-align: center;
+  border-radius: 24px;
+  background: var(--surface-glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  backdrop-filter: blur(18px) saturate(1.3);
+  border: 1px solid var(--ring);
+  box-shadow:
+    var(--shadow-2),
+    inset 0 1px 0 var(--key-sheen),
+    0 0 80px -20px var(--accent);
+  animation: panelIn 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.15) 1.7s both;
+}
+
+/* Hairline gold crown along the panel's top edge. */
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 18%;
+  right: 18%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.92);
+  }
+}
+
+/* A hard solve earns the richest panel: stronger crown glow, brighter ring. */
+.panel[data-tier='hard'] {
+  border-color: var(--accent);
+  box-shadow:
+    var(--shadow-2),
+    inset 0 1px 0 var(--key-sheen),
+    0 0 120px -14px var(--accent);
+}
+
+.kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted);
+  animation: riseIn 0.6s ease 1.9s both;
+}
+
+.title {
+  margin: 0.4rem 0 0.5rem;
+  font-family: var(--font-display), Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.7rem, 9vw, 3.6rem);
+  font-weight: 600;
+  line-height: 1.05;
+  background: linear-gradient(
+    115deg,
+    var(--accent-strong) 0%,
+    var(--accent) 30%,
+    #ecd9a4 50%,
+    var(--accent) 70%,
+    var(--accent-strong) 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation:
+    riseIn 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.15) 2s both,
+    shimmer 3.2s linear 2.7s infinite;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 110% 0;
+  }
+  to {
+    background-position: -110% 0;
+  }
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 0.95rem;
+  animation: riseIn 0.6s ease 2.15s both;
+}
+
+/* Accolade chips (Flawless, streak) land just after the subtitle. */
+.accolades {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  animation: riseIn 0.6s ease 2.25s both;
+}
+
+.accolade {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  color: var(--accent-strong);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.6rem;
+  animation: riseIn 0.6s ease 2.35s both;
+}
+
+.primary,
+.ghost {
+  padding: 0.6rem 1.25rem;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.primary {
+  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  color: #fffdf5;
+  border: 1px solid var(--accent-strong);
+  box-shadow: 0 6px 18px -6px var(--accent-strong);
+}
+
+.primary:hover {
+  transform: translateY(-1px);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--cell-border);
+}
+
+.ghost:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* ---------- Confetti ---------- */
+
+.confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.piece {
+  position: absolute;
+  top: -5vh;
+  left: var(--x);
+  width: calc(0.5rem * var(--scale));
+  height: calc(0.85rem * var(--scale));
+  background: var(--color);
+  border-radius: 2px;
+  opacity: 0;
+  animation: fall var(--duration) linear var(--delay) both;
+}
+
+.piece:nth-child(3n) {
+  border-radius: 50%;
+  height: calc(0.5rem * var(--scale));
+}
+
+.piece:nth-child(4n) {
+  animation-timing-function: ease-in;
+}
+
+@keyframes fall {
+  0% {
+    opacity: 0;
+    transform: translateY(0) rotate(0deg);
+  }
+  6% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(112vh) rotate(var(--rotate));
+  }
+}
+
+/* ---------- Reduced motion: everything appears at once, nothing moves ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .panel,
+  .kicker,
+  .title,
+  .subtitle,
+  .accolades,
+  .actions {
+    animation: none;
+  }
+  .piece {
+    display: none;
+  }
+  .primary,
+  .ghost {
+    transition: none;
+  }
+}
