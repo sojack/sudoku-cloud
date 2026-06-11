@@ -16,6 +16,7 @@ import { getSupabase } from './lib/supabase'
 import { syncState, pushRemote } from './lib/sync'
 import { createBoard } from './lib/board'
 import { boardReducer } from './lib/reducer'
+import { pushHistory, popHistory } from './lib/history'
 import { mistakes as findMistakes, remainingByDigit, isSolved, lockedCells, hasEntries, isStrike } from './lib/validation'
 import { sameNumberCellsForDigit } from './lib/highlight'
 import { generate } from './lib/generator'
@@ -53,6 +54,7 @@ export default function Game() {
   const [confirm, setConfirm] = useState(null) // { message, onConfirm } | null
   const [mistakeCount, setMistakeCount] = useState(0)
   const [gameOverDismissed, setGameOverDismissed] = useState(false)
+  const [history, setHistory] = useState([])
 
   const auth = useAuth()
   const [syncStatus, setSyncStatus] = useState(null)
@@ -87,6 +89,9 @@ export default function Game() {
   )
   // Three strikes freezes the board. Never in make mode (no solution to judge).
   const gameOver = !making && mistakeCount >= MAX_MISTAKES
+  // Undo is available whenever there is recorded history and the board is not
+  // frozen at game over or blocked by an open dialog.
+  const canUndo = history.length > 0 && !gameOver && !confirm
 
   const dismissToast = useCallback((id) => {
     setToasts((list) => list.filter((t) => t.id !== id))
@@ -102,6 +107,13 @@ export default function Game() {
     if (action.type !== 'restore') setSavedAt(Date.now())
     dispatch(action)
   }, [])
+
+  // Snapshot the current board onto the undo stack, just before a mutating edit.
+  // The reducer produces a fresh array per edit, so the captured reference is an
+  // immutable snapshot. Session-only — never persisted or synced.
+  const recordHistory = useCallback(() => {
+    setHistory((stack) => pushHistory(stack, board))
+  }, [board])
 
   // Toggle whether pencil marks are shown. Notes are never erased — only their
   // display is hidden — and the choice persists locally (not synced).
@@ -123,6 +135,7 @@ export default function Game() {
   const loadOrGenerate = useCallback(() => {
     const saved = loadGame()
     setGameOverDismissed(false)
+    setHistory([])
     if (saved && saved.board && saved.solution) {
       dispatch({ type: 'restore', board: saved.board })
       setSolution(saved.solution)
@@ -216,6 +229,7 @@ export default function Game() {
           setSavedAt(merged.savegame.savedAt ?? Date.now())
           setMistakeCount(merged.savegame.mistakeCount ?? 0)
           setGameOverDismissed(false)
+          setHistory([])
         }
         setSyncStatus('synced')
       })
@@ -257,6 +271,7 @@ export default function Game() {
 
   function handleDigit(d) {
     if (selectedIndex == null || locked.has(selectedIndex) || gameOver) return
+    recordHistory()
     if (notesMode) {
       dispatchAndStamp({ type: 'toggleNote', index: selectedIndex, value: d })
     } else {
@@ -270,6 +285,7 @@ export default function Game() {
 
   function handleErase() {
     if (selectedIndex == null || locked.has(selectedIndex) || gameOver) return
+    recordHistory()
     dispatchAndStamp({ type: 'clearCell', index: selectedIndex })
   }
 
@@ -289,6 +305,20 @@ export default function Game() {
     }
   }
 
+  // Memoized so the Cmd/Ctrl+Z effect can list it as a dependency and always
+  // call a fresh closure — no stale `history`/`canUndo` capture.
+  const handleUndo = useCallback(() => {
+    if (!canUndo) return
+    const { snapshot, stack } = popHistory(history)
+    if (snapshot == null) return
+    setHistory(stack)
+    // An undo is a real user edit: stamp savedAt so it wins newest-board-wins
+    // sync. dispatchAndStamp suppresses the stamp for 'restore', so dispatch the
+    // restore directly and stamp here.
+    setSavedAt(Date.now())
+    dispatch({ type: 'restore', board: snapshot })
+  }, [canUndo, history])
+
   function handleNewGame() {
     const p = generate(difficulty)
     dispatchAndStamp({ type: 'newGame', givens: p.givens })
@@ -299,6 +329,7 @@ export default function Game() {
     setSelectedIndex(null)
     setMistakeCount(0)
     setGameOverDismissed(false)
+    setHistory([])
   }
 
   function handleReset() {
@@ -306,6 +337,7 @@ export default function Game() {
     setSelectedIndex(null)
     setMistakeCount(0)
     setGameOverDismissed(false)
+    setHistory([])
     // solveRecorded intentionally preserved — replaying the same puzzle must
     // not re-count toward stats.
   }
@@ -318,6 +350,7 @@ export default function Game() {
     setSelectedIndex(null)
     setMistakeCount(0)
     setGameOverDismissed(false)
+    setHistory([])
   }
 
   function handleStart() {
@@ -341,6 +374,7 @@ export default function Game() {
     setSelectedIndex(null)
     setMistakeCount(0)
     setGameOverDismissed(false)
+    setHistory([])
   }
 
   function handleCancel() {
@@ -355,6 +389,7 @@ export default function Game() {
     function onKeyDown(e) {
       if (confirm || gameOver || selectedIndex == null || locked.has(selectedIndex)) return
       if (e.key >= '1' && e.key <= '9') {
+        recordHistory()
         const d = Number(e.key)
         if (!notesMode && isStrike(board[selectedIndex].value, d, solution[selectedIndex])) {
           setMistakeCount((c) => c + 1)
@@ -362,12 +397,28 @@ export default function Game() {
         dispatchAndStamp({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: d })
         if (!notesMode) setHighlightDigit(d)
       } else if (e.key === 'Backspace' || e.key === 'Delete') {
+        recordHistory()
         dispatchAndStamp({ type: 'clearCell', index: selectedIndex })
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedIndex, notesMode, dispatchAndStamp, locked, confirm, gameOver, board, solution])
+  }, [selectedIndex, notesMode, dispatchAndStamp, locked, confirm, gameOver, board, solution, recordHistory])
+
+  // Undo (Cmd/Ctrl+Z). Separate from the per-cell key handler so it works with
+  // no cell selected. preventDefault stops the browser's own text-undo. Ignored
+  // while a modal is open or the board is frozen at game over.
+  useEffect(() => {
+    function onKey(e) {
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
+        if (confirm || gameOver) return
+        e.preventDefault()
+        handleUndo()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [confirm, gameOver, handleUndo])
 
   return (
     <div className={styles.game}>
@@ -395,6 +446,8 @@ export default function Game() {
         notesHidden={notesHidden}
         onDigit={handleDigit}
         onErase={handleErase}
+        onUndo={handleUndo}
+        canUndo={canUndo}
         onToggleNotes={() => setNotesMode((m) => !m)}
         onToggleHideNotes={toggleHideNotes}
       />

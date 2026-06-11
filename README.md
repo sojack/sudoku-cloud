@@ -110,6 +110,12 @@ The path from the current proof-of-concept to a finished, daily-use app.
 - [x] Third strike freezes the board with a game-over modal (New puzzle / Reset)
 - [x] Strike count persists across reloads and sync, closing the spam-the-cell exploit
 
+### Phase 8 — Undo ✅
+
+- [x] Multi-step undo (Cmd/Ctrl+Z and a keypad button) that restores the whole prior board
+- [x] Recovers notes wiped across a row/column/box by an accidental value placement
+- [x] Session-only history; never refunds a mistake strike
+
 ### Future — Native iOS app (maybe)
 
 Possible future feature, not committed. The app is pure client-side, so the

@@ -1,8 +1,8 @@
 import styles from './page.module.css'
 
-// On-screen 1-9 keypad with remaining-count badges, erase, and notes toggle.
+// On-screen 1-9 keypad with remaining-count badges, undo, erase, and notes toggle.
 // `remaining` is { 1..9: count }. Acts on the selected cell via handlers.
-export default function Keypad({ remaining, notesMode, notesHidden, onDigit, onErase, onToggleNotes, onToggleHideNotes }) {
+export default function Keypad({ remaining, notesMode, notesHidden, onDigit, onErase, onUndo, canUndo, onToggleNotes, onToggleHideNotes }) {
   return (
     <div className={styles.keypad}>
       <div className={styles.keys}>
@@ -23,6 +23,14 @@ export default function Keypad({ remaining, notesMode, notesHidden, onDigit, onE
         })}
       </div>
       <div className={styles.keyActions}>
+        <button
+          type="button"
+          className={`${styles.key} ${!canUndo ? styles.keyDisabled : ''}`}
+          disabled={!canUndo}
+          onClick={onUndo}
+        >
+          Undo
+        </button>
         <button type="button" className={styles.key} onClick={onErase}>
           Erase
         </button>
