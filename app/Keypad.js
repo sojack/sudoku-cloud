@@ -1,6 +1,6 @@
 import styles from './page.module.css'
 
-// On-screen 1-9 keypad with remaining-count badges, erase, and notes toggle.
+// On-screen 1-9 keypad with remaining-count badges, undo, erase, and notes toggle.
 // `remaining` is { 1..9: count }. Acts on the selected cell via handlers.
 export default function Keypad({ remaining, notesMode, notesHidden, onDigit, onErase, onUndo, canUndo, onToggleNotes, onToggleHideNotes }) {
   return (
