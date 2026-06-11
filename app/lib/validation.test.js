@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mistakes, isSolved, remainingByDigit, lockedCells, hasEntries } from './validation'
+import { mistakes, isSolved, remainingByDigit, lockedCells, hasEntries, isStrike } from './validation'
 import { createBoard } from './board'
 
 function emptyGivens() {
@@ -134,5 +134,24 @@ describe('remainingByDigit', () => {
     board[1] = { value: 5, given: false, notes: [] }
     const r = remainingByDigit(board)
     expect(r[5]).toBe(7)
+  })
+})
+
+describe('isStrike', () => {
+  it('is a strike when a new wrong value is placed in an empty cell', () => {
+    // sol=3, placing 5 over an empty cell
+    expect(isStrike(null, 5, 3)).toBe(true)
+  })
+  it('is not a strike when the correct value is placed', () => {
+    expect(isStrike(null, 3, 3)).toBe(false)
+  })
+  it('is not a strike when re-placing the same wrong value (no change)', () => {
+    expect(isStrike(5, 5, 3)).toBe(false)
+  })
+  it('is a strike when changing one wrong value to another wrong value', () => {
+    expect(isStrike(5, 7, 3)).toBe(true)
+  })
+  it('is not a strike when replacing a wrong value with the correct one', () => {
+    expect(isStrike(5, 3, 3)).toBe(false)
   })
 })

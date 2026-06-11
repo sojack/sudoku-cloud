@@ -9,12 +9,14 @@ import StatsPanel from './StatsPanel'
 import Toast from './Toast'
 import AccountMenu from './AccountMenu'
 import ConfirmDialog from './ConfirmDialog'
+import MistakeCounter from './MistakeCounter'
+import GameOverDialog from './GameOverDialog'
 import { useAuth } from './AuthProvider'
 import { getSupabase } from './lib/supabase'
 import { syncState, pushRemote } from './lib/sync'
 import { createBoard } from './lib/board'
 import { boardReducer } from './lib/reducer'
-import { mistakes as findMistakes, remainingByDigit, isSolved, lockedCells, hasEntries } from './lib/validation'
+import { mistakes as findMistakes, remainingByDigit, isSolved, lockedCells, hasEntries, isStrike } from './lib/validation'
 import { sameNumberCellsForDigit } from './lib/highlight'
 import { generate } from './lib/generator'
 import { validatePuzzle } from './lib/makepuzzle'
@@ -27,6 +29,7 @@ import styles from './page.module.css'
 const EMPTY_GIVENS = Array(81).fill(0)
 const DEFAULT_DIFFICULTY = 'medium'
 const NO_MISTAKES = new Set()
+const MAX_MISTAKES = 3
 
 // Monotonic id source for toast messages (module-level so it survives renders).
 let toastSeq = 0
@@ -48,6 +51,8 @@ export default function Game() {
   const [toasts, setToasts] = useState([])
   const [notesHidden, setNotesHidden] = useState(false)
   const [confirm, setConfirm] = useState(null) // { message, onConfirm } | null
+  const [mistakeCount, setMistakeCount] = useState(0)
+  const [gameOverDismissed, setGameOverDismissed] = useState(false)
 
   const auth = useAuth()
   const [syncStatus, setSyncStatus] = useState(null)
@@ -80,6 +85,8 @@ export default function Game() {
     () => ready && !making && isSolved(board, solution),
     [ready, making, board, solution]
   )
+  // Three strikes freezes the board. Never in make mode (no solution to judge).
+  const gameOver = !making && mistakeCount >= MAX_MISTAKES
 
   const dismissToast = useCallback((id) => {
     setToasts((list) => list.filter((t) => t.id !== id))
@@ -115,6 +122,7 @@ export default function Game() {
   // and when cancelling make mode.
   const loadOrGenerate = useCallback(() => {
     const saved = loadGame()
+    setGameOverDismissed(false)
     if (saved && saved.board && saved.solution) {
       dispatch({ type: 'restore', board: saved.board })
       setSolution(saved.solution)
@@ -123,6 +131,7 @@ export default function Game() {
       setSolveRecorded(saved.recorded ?? false)
       setGivens(saved.board.map((c) => (c.given ? c.value : 0)))
       setSavedAt(saved.savedAt ?? 0)
+      setMistakeCount(saved.mistakeCount ?? 0)
     } else {
       const p = generate(DEFAULT_DIFFICULTY)
       dispatch({ type: 'newGame', givens: p.givens })
@@ -134,6 +143,7 @@ export default function Game() {
       // An untouched auto-generated starter sorts as oldest, so a real
       // in-progress game on the cloud wins until the user actually plays.
       setSavedAt(0)
+      setMistakeCount(0)
     }
   }, [])
 
@@ -163,8 +173,8 @@ export default function Game() {
   // Persist the game after ready — but never while making a puzzle.
   useEffect(() => {
     if (!ready || making) return
-    saveGame({ board, solution, difficulty, category, recorded: solveRecorded, savedAt })
-  }, [ready, making, board, solution, difficulty, category, solveRecorded, savedAt])
+    saveGame({ board, solution, difficulty, category, recorded: solveRecorded, savedAt, mistakeCount })
+  }, [ready, making, board, solution, difficulty, category, solveRecorded, savedAt, mistakeCount])
 
   // Record a solve exactly once per puzzle instance, then toast any new badges.
   useEffect(() => {
@@ -204,6 +214,8 @@ export default function Game() {
           setSolveRecorded(merged.savegame.recorded ?? false)
           setGivens(merged.savegame.board.map((c) => (c.given ? c.value : 0)))
           setSavedAt(merged.savegame.savedAt ?? Date.now())
+          setMistakeCount(merged.savegame.mistakeCount ?? 0)
+          setGameOverDismissed(false)
         }
         setSyncStatus('synced')
       })
@@ -244,17 +256,20 @@ export default function Game() {
   }
 
   function handleDigit(d) {
-    if (selectedIndex == null || locked.has(selectedIndex)) return
+    if (selectedIndex == null || locked.has(selectedIndex) || gameOver) return
     if (notesMode) {
       dispatchAndStamp({ type: 'toggleNote', index: selectedIndex, value: d })
     } else {
+      if (isStrike(board[selectedIndex].value, d, solution[selectedIndex])) {
+        setMistakeCount((c) => c + 1)
+      }
       dispatchAndStamp({ type: 'setValue', index: selectedIndex, value: d })
       setHighlightDigit(d)
     }
   }
 
   function handleErase() {
-    if (selectedIndex == null || locked.has(selectedIndex)) return
+    if (selectedIndex == null || locked.has(selectedIndex) || gameOver) return
     dispatchAndStamp({ type: 'clearCell', index: selectedIndex })
   }
 
@@ -282,11 +297,15 @@ export default function Game() {
     setCategory(p.difficulty)
     setSolveRecorded(false)
     setSelectedIndex(null)
+    setMistakeCount(0)
+    setGameOverDismissed(false)
   }
 
   function handleReset() {
     dispatchAndStamp({ type: 'newGame', givens })
     setSelectedIndex(null)
+    setMistakeCount(0)
+    setGameOverDismissed(false)
     // solveRecorded intentionally preserved — replaying the same puzzle must
     // not re-count toward stats.
   }
@@ -297,6 +316,8 @@ export default function Game() {
     setMakeMessage(null)
     setNotesMode(false)
     setSelectedIndex(null)
+    setMistakeCount(0)
+    setGameOverDismissed(false)
   }
 
   function handleStart() {
@@ -318,6 +339,8 @@ export default function Game() {
     setMode('play')
     setMakeMessage(null)
     setSelectedIndex(null)
+    setMistakeCount(0)
+    setGameOverDismissed(false)
   }
 
   function handleCancel() {
@@ -330,9 +353,12 @@ export default function Game() {
   // Physical keyboard on the selected cell.
   useEffect(() => {
     function onKeyDown(e) {
-      if (confirm || selectedIndex == null || locked.has(selectedIndex)) return
+      if (confirm || gameOver || selectedIndex == null || locked.has(selectedIndex)) return
       if (e.key >= '1' && e.key <= '9') {
         const d = Number(e.key)
+        if (!notesMode && isStrike(board[selectedIndex].value, d, solution[selectedIndex])) {
+          setMistakeCount((c) => c + 1)
+        }
         dispatchAndStamp({ type: notesMode ? 'toggleNote' : 'setValue', index: selectedIndex, value: d })
         if (!notesMode) setHighlightDigit(d)
       } else if (e.key === 'Backspace' || e.key === 'Delete') {
@@ -341,7 +367,7 @@ export default function Game() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedIndex, notesMode, dispatchAndStamp, locked, confirm])
+  }, [selectedIndex, notesMode, dispatchAndStamp, locked, confirm, gameOver, board, solution])
 
   return (
     <div className={styles.game}>
@@ -349,6 +375,7 @@ export default function Game() {
       <AccountMenu syncStatus={syncStatus} />
       <Toast toasts={toasts} onDismiss={dismissToast} />
       {won && <p className={styles.win}>Solved! 🎉</p>}
+      {!making && <MistakeCounter count={mistakeCount} max={MAX_MISTAKES} />}
       {making && (
         <p className={styles.makeHint}>
           Enter your puzzle, then press Start.
@@ -391,6 +418,13 @@ export default function Game() {
           message={confirm.message}
           onConfirm={confirm.onConfirm}
           onCancel={() => setConfirm(null)}
+        />
+      )}
+      {gameOver && !gameOverDismissed && (
+        <GameOverDialog
+          onNewGame={handleNewGame}
+          onReset={handleReset}
+          onDismiss={() => setGameOverDismissed(true)}
         />
       )}
       {!making && stats && <StatsPanel stats={stats} />}

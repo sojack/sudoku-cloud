@@ -50,3 +50,12 @@ export function lockedCells(board, solution) {
   }
   return locked
 }
+
+// True when placing `nextValue` in a cell is a *new wrong* value: an actual
+// change away from the previous value, to something other than the solution
+// digit. Re-placing the same wrong value, erasing, and correct placements never
+// strike. This is the whole anti-spam rule — abusing instant feedback by cycling
+// digits now costs one strike per distinct wrong guess.
+export function isStrike(prevValue, nextValue, solutionDigit) {
+  return nextValue !== prevValue && nextValue !== solutionDigit
+}
