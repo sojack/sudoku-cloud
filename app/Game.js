@@ -95,14 +95,16 @@ export default function Game() {
     () => ready && !making && isSolved(board, solution),
     [ready, making, board, solution]
   )
-  // While the player is admiring a solved board (overlay dismissed), loop the
-  // board's golden wave roughly every 5s by bumping winReplayKey. Skipped under
-  // prefers-reduced-motion (the CSS already disables the animation there, so the
-  // timer would only churn re-mounts for no visible effect). Stops when the gate
-  // goes false (new puzzle / reset) or on unmount.
+  // While the player is admiring a solved board (overlay dismissed), replay the
+  // board's golden wave: once immediately on reveal (the overlay covered the
+  // first play, so this is the player's first real look at it) and then every 5s
+  // by bumping winReplayKey. The win wave is intentionally exempt from
+  // prefers-reduced-motion (see page.module.css) — it is a deliberate,
+  // once-per-solve celebration, not ambient motion — so no motion guard here.
+  // Stops when the gate goes false (new puzzle / reset) or on unmount.
   useEffect(() => {
     if (!won || !winDismissed || making) return
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    setWinReplayKey((k) => k + 1)
     const id = setInterval(() => setWinReplayKey((k) => k + 1), 5000)
     return () => clearInterval(id)
   }, [won, winDismissed, making])

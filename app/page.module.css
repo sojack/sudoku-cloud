@@ -721,10 +721,12 @@
   }
   .value,
   .cell.wrong .value,
-  .boardWon .cell,
   .pipFilled,
   .statsBody,
   .toast {
     animation: none;
   }
+  /* The solve wave (.boardWon .cell) is deliberately NOT suppressed here: it is
+     a once-per-solve celebration the player opts into, not ambient motion, so it
+     plays even under reduced motion. Confetti and digit pop stay suppressed. */
 }
