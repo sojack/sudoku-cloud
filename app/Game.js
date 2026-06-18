@@ -59,6 +59,9 @@ export default function Game() {
   // savegame's `recorded` flag on restore, so reloading an already-solved
   // board doesn't replay the overlay.
   const [winDismissed, setWinDismissed] = useState(false)
+  // Bumped every 5s while admiring a solved board so the Board re-plays its
+  // golden wave (the win overlay covers it on mobile, so it is never seen live).
+  const [winReplayKey, setWinReplayKey] = useState(0)
   const [history, setHistory] = useState([])
 
   const auth = useAuth()
@@ -92,6 +95,17 @@ export default function Game() {
     () => ready && !making && isSolved(board, solution),
     [ready, making, board, solution]
   )
+  // While the player is admiring a solved board (overlay dismissed), loop the
+  // board's golden wave roughly every 5s by bumping winReplayKey. Skipped under
+  // prefers-reduced-motion (the CSS already disables the animation there, so the
+  // timer would only churn re-mounts for no visible effect). Stops when the gate
+  // goes false (new puzzle / reset) or on unmount.
+  useEffect(() => {
+    if (!won || !winDismissed || making) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const id = setInterval(() => setWinReplayKey((k) => k + 1), 5000)
+    return () => clearInterval(id)
+  }, [won, winDismissed, making])
   // Three strikes freezes the board. Never in make mode (no solution to judge).
   const gameOver = !making && mistakeCount >= MAX_MISTAKES
   // Undo is available whenever there is recorded history and the board is not
@@ -462,6 +476,7 @@ export default function Game() {
             sameNumber={sameNumber}
             selectedIndex={selectedIndex}
             won={won}
+            replayKey={winReplayKey}
             onSelect={handleSelect}
           />
         </section>
