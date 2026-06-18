@@ -85,9 +85,9 @@ The path from the current proof-of-concept to a finished, daily-use app.
 
 ### Phase 4 — Polish ✅
 
-- [x] Styling pass + dark mode + mobile layout
+- [x] Styling pass + dark mode + mobile layout (later superseded by the Phase 9 overhaul)
 - [x] Highlight peers / same-numbers
-- [x] ~~Timer, hint button, undo / redo~~ — intentionally dropped (not wanted)
+- [x] ~~Timer, hint button, undo / redo~~ — undo later added in Phase 8; timer/hint still dropped
 - [x] ~~Keyboard navigation between cells~~ — intentionally dropped (not wanted)
 
 ### Phase 5 — Progress & stats ✅
@@ -115,6 +115,19 @@ The path from the current proof-of-concept to a finished, daily-use app.
 - [x] Multi-step undo (Cmd/Ctrl+Z and a keypad button) that restores the whole prior board
 - [x] Recovers notes wiped across a row/column/box by an accidental value placement
 - [x] Session-only history; never refunds a mistake strike
+
+### Phase 9 — Visual overhaul & win celebration ✅
+
+- [x] Premium theme pass: "Ivory & Gilt" light / "Midnight Velvet" dark, champagne-gold
+      accent, frosted-glass selected tile, row/column/box crosshair highlight
+- [x] Typography via `next/font` (Outfit for UI/digits, Fraunces for the wordmark);
+      desktop two-pane layout (board + sticky side panel), larger mobile touch targets
+- [x] Staged win celebration overlay: diagonal golden board wave → glass backdrop →
+      shimmering title → confetti → actions, tiered by difficulty with Flawless and
+      daily-streak accolade chips
+- [x] Win wave replays while admiring the solved board: fires on dismiss, then loops
+      ~every 5s (the overlay covers the board on mobile, so the live play is otherwise
+      missed); plays even under `prefers-reduced-motion` (confetti / digit-pop stay off)
 
 ### Future — Native iOS app (maybe)
 
